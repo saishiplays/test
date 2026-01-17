@@ -1,7 +1,11 @@
 /* ================= FIREBASE (MODULAR) ================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, query, orderByChild } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {
+  getDatabase, ref, set, get, onValue, query, orderByChild
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+import {
+  getAuth, signInAnonymously, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 /* ================= CONFIG ================= */
 const firebaseConfig = {
@@ -9,7 +13,7 @@ const firebaseConfig = {
   authDomain: "test-3de69.firebaseapp.com",
   databaseURL: "https://test-3de69-default-rtdb.asia-southeast1.firebasedatabase.app/",
   projectId: "test-3de69",
-  storageBucket: "test-3de69.appspot.com",
+  storageBucket: "test-3de69.firebasestorage.app",
   messagingSenderId: "361141862152",
   appId: "1:361141862152:web:1a897b3932a7d892a7f6bd"
 };
@@ -23,7 +27,7 @@ let uid = null;
 signInAnonymously(auth);
 onAuthStateChanged(auth, user => uid = user?.uid || null);
 
-/* ================= DOM ================= */
+/* ================= DOM ELEMENTS ================= */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const nameScreen = document.getElementById("nameScreen");
@@ -32,6 +36,7 @@ const nameInput = document.getElementById("playerNameInput");
 const themeToggle = document.getElementById("themeToggle");
 const leftBtn = document.getElementById("leftBtn");
 const rightBtn = document.getElementById("rightBtn");
+const jumpBtn = document.getElementById("jumpBtn");
 
 /* ================= STATE ================= */
 let playerName = localStorage.getItem("playerName") || "";
@@ -40,72 +45,72 @@ let gameStarted = false;
 let gameOver = false;
 let score = 0;
 let bestScore = Number(localStorage.getItem("bestScore") || 0);
+let lastY = Number(localStorage.getItem("lastY") || 300);
+let lastPlatforms = JSON.parse(localStorage.getItem("lastPlatforms") || "[]");
 let velocityY = -10;
 let difficulty = 1;
 let leaderboard = [];
-let theme = "dark";
+let gravity = 0.25;
+let playerScale = { x:1, y:1 };
+let theme = localStorage.getItem("theme") || "dark";
 
 /* ================= PLAYER ================= */
-const player = { x:180, y:300, width:40, height:40, speed:5 };
-let moveLeft=false, moveRight=false;
-let playerScale = { x:1, y:1 };
+const player = { x: 180, y: lastY, width: 40, height: 40, speed: 5 };
+let moveLeft=false, moveRight=false, canDoubleJump=false;
 
 /* ================= IMAGES ================= */
-const playerImg = new Image(); playerImg.src="assets/player.gif";
-const platformImg = new Image(); platformImg.src="assets/platform.png";
-const breakImg = new Image(); breakImg.src="assets/platform_break.png";
-
-const images = [playerImg, platformImg, breakImg];
-let imagesLoaded=0;
-images.forEach(img => img.onload = ()=>{
-  imagesLoaded++;
-  if(imagesLoaded===images.length && gameStarted) startGame();
-});
+const playerImg = new Image(); playerImg.src = "assets/player.gif";
+const platformImg = new Image(); platformImg.src = "assets/platform.png";
+const breakImg = new Image(); breakImg.src = "assets/platform_break.png";
 
 /* ================= PLATFORMS ================= */
-const platformGap=80, platformCount=8;
-let platforms=[];
+const platformGap = 80;
+const platformCount = 8;
+let platforms = lastPlatforms.length?lastPlatforms:[];
+if(!platforms.length){
+  for(let i=0;i<platformCount;i++) platforms.push({ x: Math.random()*300, y: canvas.height-i*platformGap, width:100, height:16, type:"static", dir:1, broken:false });
+}
+
 function createPlatform(y){
   let type="static";
   if(score>1500 && Math.random()<0.35) type="break";
   else if(score>800 && Math.random()<0.5) type="move";
-  return {x:Math.random()*300,y,width:100,height:16,type,dir:Math.random()<0.5?-1:1,broken:false};
+  return { x:Math.random()*300, y, width:100, height:16, type, dir:Math.random()<0.5?-1:1, broken:false };
 }
-function initPlatforms(){ platforms=[]; for(let i=0;i<platformCount;i++) platforms.push(createPlatform(canvas.height-i*platformGap));}
 
-/* ================= WEEKLY ================= */
-function getWeekKey(){ 
-  const now=new Date(); 
-  const onejan=new Date(now.getFullYear(),0,1); 
-  const week=Math.ceil((((now-onejan)/86400000)+onejan.getDay()+1)/7); 
+/* ================= WEEKLY RESET ================= */
+function getWeekKey(){
+  const now=new Date();
+  const onejan=new Date(now.getFullYear(),0,1);
+  const week=Math.ceil((((now-onejan)/86400000)+onejan.getDay()+1)/7);
   return `${now.getFullYear()}-W${week}`;
 }
-const currentWeek = getWeekKey();
+const currentWeek=getWeekKey();
 
 /* ================= ANTI-CHEAT ================= */
 function validScore(s){ return Number.isInteger(s) && s>=0 && s<=999999; }
 
-/* ================= FIREBASE SCORE ================= */
+/* ================= FIREBASE ================= */
 async function saveScore(){
   if(!uid || !validScore(score)) return;
   const userRef = ref(db, `scores/${uid}`);
   const snap = await get(userRef);
   const prev = snap.val();
   if(!prev || score>prev.score){
-    await set(userRef,{name:displayName,score,week:currentWeek});
+    await set(userRef, { name: displayName, score, week:currentWeek });
   }
 }
 
 function listenLeaderboard(){
-  const q=query(ref(db,"scores"), orderByChild("week"));
-  onValue(q,snap=>{
+  const q = query(ref(db,"scores"), orderByChild("week"));
+  onValue(q, snap=>{
     leaderboard=[];
     snap.forEach(s=>{
       const v=s.val();
       if(v.week===currentWeek) leaderboard.push(v);
     });
     leaderboard.sort((a,b)=>b.score-b.score);
-    leaderboard=leaderboard.slice(0,5);
+    leaderboard = leaderboard.slice(0,5);
   });
 }
 
@@ -115,20 +120,23 @@ function startAfterName(){
   if(val){ playerName=val; displayName=val; localStorage.setItem("playerName",val);}
   nameScreen.style.display="none";
   gameStarted=true;
-  startGame();
 }
 if(playerName) startAfterName();
 else nameScreen.style.display="flex";
 startBtn.onclick=startAfterName;
 
-/* ================= MOBILE ================= */
-leftBtn.ontouchstart=()=>moveLeft=true;
-rightBtn.ontouchstart=()=>moveRight=true;
-leftBtn.ontouchend=()=>moveLeft=false;
-rightBtn.ontouchend=()=>moveRight=false;
+/* ================= MOBILE CONTROLS ================= */
+leftBtn.ontouchstart = () => moveLeft=true;
+rightBtn.ontouchstart = () => moveRight=true;
+jumpBtn.ontouchstart = () => {
+  if(velocityY>0) velocityY=-10;
+  else if(canDoubleJump){ velocityY=-10; canDoubleJump=false;}
+};
+leftBtn.ontouchend = () => moveLeft=false;
+rightBtn.ontouchend = () => moveRight=false;
 
 /* ================= THEME ================= */
-themeToggle.onclick=()=>{
+themeToggle.onclick = () => {
   theme = theme==="dark"?"dark-neon":"dark";
   localStorage.setItem("theme",theme);
 };
@@ -137,6 +145,10 @@ themeToggle.onclick=()=>{
 document.addEventListener("keydown",e=>{
   if(e.key==="ArrowLeft") moveLeft=true;
   if(e.key==="ArrowRight") moveRight=true;
+  if(e.key===" " || e.key==="ArrowUp"){
+    if(velocityY>0) velocityY=-10;
+    else if(canDoubleJump){ velocityY=-10; canDoubleJump=false;}
+  }
   if(e.key==="Enter" && gameOver) restart();
 });
 document.addEventListener("keyup",e=>{
@@ -150,11 +162,6 @@ function wrapPlayer(){
   if(player.x+player.width<0) player.x=canvas.width;
 }
 
-function updatePlayerScale(){
-  if(velocityY<0){ playerScale.x=0.9; playerScale.y=1.1; }
-  else if(velocityY>0){ playerScale.x=1; playerScale.y=1; }
-}
-
 function restart(){
   saveScore();
   bestScore=Math.max(bestScore,score);
@@ -164,36 +171,43 @@ function restart(){
   initPlatforms();
 }
 
+function initPlatforms(){
+  if(platforms.length<platformCount){
+    for(let i=platforms.length;i<platformCount;i++) platforms.push(createPlatform(canvas.height-i*platformGap));
+  }
+}
+
+/* ================= UPDATE ================= */
 function update(){
   if(!gameStarted || gameOver) return;
 
-  let targetX=player.x;
-  if(moveLeft) targetX-=player.speed;
-  if(moveRight) targetX+=player.speed;
-  player.x += (targetX-player.x)*0.2;
+  // movement
+  if(moveLeft) player.x-=player.speed;
+  if(moveRight) player.x+=player.speed;
 
-  velocityY += 0.25; // slower gravity
-  player.y += velocityY;
-
+  velocityY+=gravity;
+  player.y+=velocityY;
   wrapPlayer();
-  difficulty = Math.min(4,1+Math.floor(score/1000));
-  player.speed=5+difficulty*0.4;
 
+  difficulty = Math.min(4, 1 + Math.floor(score/1000));
+  player.speed = 5 + difficulty*0.4;
+
+  // platforms
   platforms.forEach(p=>{
     if(p.type==="move"){
-      p.x += p.dir*(0.8+difficulty*0.3);
-      if(p.x<=0||p.x+p.width>=canvas.width) p.dir*=-1;
+      p.x+=p.dir*(0.8+difficulty*0.3);
+      if(p.x<=0 || p.x+p.width>=canvas.width) p.dir*=-1;
     }
     if(!p.broken &&
-       player.y+player.height>p.y &&
-       player.y+player.height<p.y+p.height &&
-       player.x+player.width>p.x &&
-       player.x<p.x+p.width &&
-       velocityY>0){
+      player.y+player.height>p.y &&
+      player.y+player.height<p.y+p.height &&
+      player.x+player.width>p.x &&
+      player.x<p.x+p.width &&
+      velocityY>0){
       velocityY=-9;
       if(p.type==="break") p.broken=true;
-      playerScale.x=1.2;
-      playerScale.y=0.8;
+      playerScale.x=1.2; playerScale.y=0.8;
+      canDoubleJump=true;
     }
   });
 
@@ -214,40 +228,37 @@ function update(){
     saveScore();
   }
 
-  updatePlayerScale();
+  // save last session
+  localStorage.setItem("lastY",player.y);
+  localStorage.setItem("lastPlatforms",JSON.stringify(platforms));
 }
 
 /* ================= DRAW ================= */
 function draw(){
-  // gradient background
-  const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
-  gradient.addColorStop(0,"#0b1d3c");
-  gradient.addColorStop(1,"#020b1f");
-  ctx.fillStyle=gradient;
+  // background
+  ctx.fillStyle=theme==="dark"?"#000":"#020b1f";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // platforms with glow
+  // platforms
   platforms.forEach(p=>{
     if(!p.broken){
-      ctx.shadowColor="rgba(0,255,128,0.3)";
+      ctx.shadowColor="#0f0";
       ctx.shadowBlur=8;
       ctx.drawImage(p.type==="break"?breakImg:platformImg,p.x,p.y,p.width,p.height);
+      ctx.shadowBlur=0;
     }
   });
-  ctx.shadowBlur=0;
 
-  // player
+  // player with squish
   ctx.save();
   ctx.translate(player.x+player.width/2,player.y+player.height/2);
   ctx.scale(playerScale.x,playerScale.y);
   ctx.drawImage(playerImg,-player.width/2,-player.height/2,player.width,player.height);
   ctx.restore();
+  playerScale.x = 1;
+  playerScale.y = 1;
 
-  // score & leaderboard boxes
-  ctx.fillStyle="rgba(0,0,0,0.5)";
-  ctx.fillRect(5,5,130,100);
-  ctx.fillRect(235,5,150,130);
-
+  // UI
   ctx.fillStyle="#fff";
   ctx.font="16px monospace";
   ctx.fillText(`User: ${displayName}`,10,20);
@@ -261,6 +272,7 @@ function draw(){
     ctx.fillText(`${i+1}. ${l.name} - ${l.score}`,240,40+i*20);
   });
 
+  // game over overlay
   if(gameOver){
     ctx.fillStyle="rgba(0,0,0,0.7)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -276,7 +288,6 @@ function draw(){
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
 /* ================= START ================= */
-function startGame(){
-  initPlatforms();
-  listenLeaderboard();
-}
+initPlatforms();
+listenLeaderboard();
+loop();
