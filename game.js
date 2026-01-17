@@ -1,19 +1,7 @@
 /* ================= FIREBASE (MODULAR) ================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {
-  getDatabase,
-  ref,
-  set,
-  get,
-  onValue,
-  query,
-  orderByChild
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
-import {
-  getAuth,
-  signInAnonymously,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getDatabase, ref, set, get, onValue, query, orderByChild } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 /* ================= CONFIG ================= */
 const firebaseConfig = {
@@ -35,14 +23,12 @@ let uid = null;
 signInAnonymously(auth);
 onAuthStateChanged(auth, user => uid = user?.uid || null);
 
-/* ================= DOM ELEMENTS ================= */
+/* ================= DOM ================= */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const nameScreen = document.getElementById("nameScreen");
 const startBtn = document.getElementById("startBtn");
 const nameInput = document.getElementById("playerNameInput");
-
-/* Optional UI elements (theme & mobile) */
 const themeToggle = document.getElementById("themeToggle");
 const leftBtn = document.getElementById("leftBtn");
 const rightBtn = document.getElementById("rightBtn");
@@ -129,7 +115,7 @@ function listenLeaderboard(){
   });
 }
 
-/* ================= START GAME FUNCTION ================= */
+/* ================= START GAME ================= */
 function startGame() {
   initPlatforms();
   listenLeaderboard();
