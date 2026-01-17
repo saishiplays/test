@@ -58,7 +58,7 @@ images.forEach(img => {
     console.log("🔥 Image loaded:", img.src);
     if (imagesLoaded === images.length) {
       imagesReady = true;
-      if (gameStarted) firebaseAndImagesReady();
+      if (gameStarted && firebaseReady) startGame();
     }
   };
 });
@@ -71,7 +71,7 @@ function startAfterName() {
   console.log(`🔥 Starting game for player: ${playerName}`);
   nameScreen.style.display = "none";
   gameStarted = true;
-  firebaseAndImagesReady();
+  if (imagesReady && firebaseReady) startGame();
 }
 
 startBtn.onclick = () => {
@@ -116,27 +116,19 @@ const firebaseConfig = {
 
 // ================= FIREBASE VARIABLES =================
 let db, scoresRef;
-let firebaseReadyFlag = false;
+let firebaseReady = false;
 
 // ================= FIREBASE INIT =================
 function initFirebase() {
-  if (typeof firebase === "undefined") {
-    console.error("🔥 Firebase NOT loaded yet!");
-    return;
-  }
   console.log("🔥 Initializing Firebase...");
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
   scoresRef = db.ref("scores");
-  firebaseReadyFlag = true;
+  firebaseReady = true;
   console.log("🔥 Firebase initialized!");
-  firebaseAndImagesReady();
-}
 
-// ================= FIREBASE + IMAGES READY CHECK =================
-function firebaseAndImagesReady() {
-  if (!firebaseReadyFlag || !imagesReady || !gameStarted) return;
-  startGame();
+  // Start game if images are ready
+  if (imagesReady && gameStarted) startGame();
 }
 
 // ================= FIREBASE SCORE =================
@@ -263,5 +255,5 @@ function loop() {
 
 // ================= START =================
 window.addEventListener("load", () => {
-  initFirebase(); // Initialize Firebase once window fully loaded
+  initFirebase(); // Firebase is guaranteed to exist after window fully loads
 });
