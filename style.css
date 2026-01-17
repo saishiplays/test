@@ -17,13 +17,12 @@
   transition: opacity 0.8s ease;
 }
 
-/* Hide loading screen smoothly */
 #loadingScreen.hide {
   opacity: 0;
   pointer-events: none;
 }
 
-/* Centering NAME SCREEN */
+/* ================= NAME SCREEN ================= */
 #nameScreen {
   position: absolute;
   top: 0;
