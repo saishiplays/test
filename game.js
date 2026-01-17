@@ -18,6 +18,7 @@ const ctx = canvas.getContext("2d");
 
 // ================= LOADING SCREEN =================
 const loadingScreen = document.getElementById("loadingScreen");
+const loadingText = document.getElementById("loadingText");
 let loadingTextInterval;
 
 // ================= PLATFORMS =================
@@ -133,14 +134,17 @@ function initFirebase() {
   checkReadyToStart();
 }
 
-// ================= FIREBASE + IMAGES + NAME READY CHECK =================
+// ================= READY CHECK =================
 function checkReadyToStart() {
   if (!firebaseReady || !imagesReady || !gameStarted) return;
 
-  // Hide loading screen
+  // Smooth fade-out animation
   if (loadingScreen) {
-    loadingScreen.style.display = "none";
+    loadingScreen.classList.add("hide");
     clearInterval(loadingTextInterval);
+    setTimeout(() => {
+      loadingScreen.style.display = "none";
+    }, 800); // matches CSS transition
   }
 
   startGame();
@@ -272,9 +276,9 @@ function loop() {
 function startLoadingAnimation() {
   let dots = 0;
   loadingTextInterval = setInterval(() => {
-    if (!loadingScreen) return;
+    if (!loadingText) return;
     dots = (dots + 1) % 4;
-    loadingScreen.innerHTML = `<h2>Loading Game${'.'.repeat(dots)}</h2>`;
+    loadingText.innerText = `Loading Game${'.'.repeat(dots)}`;
   }, 500);
 }
 
