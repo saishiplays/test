@@ -118,7 +118,7 @@ const firebaseConfig = {
 let db, scoresRef;
 let firebaseReadyFlag = false;
 
-// ================= FIREBASE INIT AFTER SCRIPTS LOAD =================
+// ================= FIREBASE INIT =================
 function initFirebase() {
   if (typeof firebase === "undefined") {
     console.error("🔥 Firebase NOT loaded yet!");
@@ -133,7 +133,7 @@ function initFirebase() {
   firebaseAndImagesReady();
 }
 
-// ================= WAIT UNTIL BOTH FIREBASE + IMAGES =================
+// ================= FIREBASE + IMAGES READY CHECK =================
 function firebaseAndImagesReady() {
   if (!firebaseReadyFlag || !imagesReady || !gameStarted) return;
   startGame();
@@ -262,7 +262,6 @@ function loop() {
 }
 
 // ================= START =================
-// Wait until window is fully loaded to initialize Firebase
 window.addEventListener("load", () => {
-  initFirebase();
+  initFirebase(); // Initialize Firebase once window fully loaded
 });
