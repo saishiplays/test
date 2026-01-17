@@ -16,6 +16,9 @@ let leaderboard = [];
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
+// ================= LOADING SCREEN =================
+const loadingScreen = document.getElementById("loadingScreen");
+
 // ================= PLATFORMS =================
 const platformCount = 8;
 const platformGap = 80;
@@ -58,7 +61,7 @@ images.forEach(img => {
     console.log("🔥 Image loaded:", img.src);
     if (imagesLoaded === images.length) {
       imagesReady = true;
-      if (gameStarted && firebaseReady) startGame();
+      if (gameStarted && firebaseReady) firebaseAndImagesReady();
     }
   };
 });
@@ -71,7 +74,9 @@ function startAfterName() {
   console.log(`🔥 Starting game for player: ${playerName}`);
   nameScreen.style.display = "none";
   gameStarted = true;
-  if (imagesReady && firebaseReady) startGame();
+
+  // Only hide loading when Firebase + images are ready
+  firebaseAndImagesReady();
 }
 
 startBtn.onclick = () => {
@@ -128,7 +133,17 @@ function initFirebase() {
   console.log("🔥 Firebase initialized!");
 
   // Start game if images are ready
-  if (imagesReady && gameStarted) startGame();
+  if (imagesReady && gameStarted) firebaseAndImagesReady();
+}
+
+// ================= FIREBASE + IMAGES READY CHECK =================
+function firebaseAndImagesReady() {
+  if (!firebaseReady || !imagesReady || !gameStarted) return;
+
+  // Hide loading screen
+  if (loadingScreen) loadingScreen.style.display = "none";
+
+  startGame();
 }
 
 // ================= FIREBASE SCORE =================
