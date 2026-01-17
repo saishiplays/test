@@ -1,4 +1,9 @@
 console.log("🔥 GAME JS LOADED");
+console.log("typeof firebase =", typeof firebase);
+
+if (typeof firebase === "undefined") {
+  console.error("🔥 Firebase NOT loaded! Check script order.");
+}
 
 /* ================= FIREBASE CONFIG ================= */
 const firebaseConfig = {
@@ -20,6 +25,12 @@ if (typeof firebase === "undefined") {
   var db = firebase.database();
   var scoresRef = db.ref("scores");
 }
+
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const scoresRef = db.ref("scores");
 
 /* ================= CANVAS ================= */
 const canvas = document.getElementById("game");
