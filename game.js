@@ -118,9 +118,6 @@ function startAfterName() {
   }
 }
 
-if (playerName) startAfterName();
-else nameScreen.style.display = "flex";
-
 startBtn.onclick = () => {
   const val = document.getElementById("playerNameInput").value.trim();
   if (!val) return;
@@ -269,4 +266,9 @@ function loop() {
 }
 
 // ================= START =================
-initFirebase(); // Initialize Firebase immediately
+window.addEventListener("DOMContentLoaded", () => {
+  console.log("🔥 DOM fully loaded, initializing Firebase...");
+  initFirebase();
+
+  if (playerName) startAfterName();
+});
