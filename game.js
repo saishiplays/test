@@ -12,7 +12,6 @@ const firebaseConfig = {
   measurementId: "G-V0LCZRWRN6"
 };
 
-// Check if firebase exists
 if (typeof firebase === "undefined") {
   console.error("🔥 Firebase NOT loaded! Check script order.");
 } else {
@@ -47,9 +46,7 @@ images.forEach(img => {
   img.onload = () => {
     imagesLoaded++;
     console.log("🔥 Image loaded:", img.src);
-    if (imagesLoaded === images.length && gameStarted) {
-      startGame();
-    }
+    if (imagesLoaded === images.length && gameStarted) startGame();
   };
 });
 
@@ -58,7 +55,6 @@ let gameOver = false;
 let score = 0;
 let velocityY = 0;
 const gravity = 0.4;
-
 const player = { x: 180, y: 300, width: 40, height: 40, speed: 6 };
 let moveLeft = false;
 let moveRight = false;
@@ -67,7 +63,6 @@ let moveRight = false;
 const platformCount = 8;
 const platformGap = 80;
 let platforms = [];
-
 function createPlatform(y) {
   return {
     x: Math.random() * 300,
@@ -79,7 +74,6 @@ function createPlatform(y) {
     broken: false
   };
 }
-
 function initPlatforms() {
   platforms = [];
   for (let i = 0; i < platformCount; i++) {
@@ -129,7 +123,6 @@ function wrapPlayer() {
 /* ================= FIREBASE SCORE ================= */
 function saveScoreFirebase() {
   if (!playerName || typeof firebase === "undefined") return;
-
   scoresRef.child(playerName).get().then(snapshot => {
     const prev = snapshot.val();
     if (!prev || score > prev.score) {
@@ -144,7 +137,7 @@ function listenLeaderboard() {
   scoresRef.orderByChild("score").limitToLast(5).on("value", snap => {
     const arr = [];
     snap.forEach(s => arr.push(s.val()));
-    leaderboard = arr.sort((a, b) => b.score - a.score);
+    leaderboard = arr.sort((a,b)=>b.score-a.score);
   });
 }
 
@@ -203,43 +196,36 @@ function update() {
   }
 }
 
-/* ================= DRAW ================= */
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+  ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
 
   platforms.forEach(p => {
     if (!p.broken) {
       const img = p.type === "break" ? breakImg : platformImg;
-      ctx.drawImage(img, p.x, p.y, p.width, p.height);
+      ctx.drawImage(img,p.x,p.y,p.width,p.height);
     }
   });
 
-  // Player info
   ctx.fillStyle = "#fff";
   ctx.font = "16px monospace";
   ctx.fillText(`Player: ${playerName}`, 10, 20);
   ctx.fillText(`Score: ${score}`, 10, 40);
 
-  // Leaderboard
   ctx.fillText("Leaderboard:", 250, 20);
-  leaderboard.forEach((l, i) => {
-    ctx.fillStyle = l.name === playerName ? "#0f0" : "#fff";
-    ctx.fillText(`${i + 1}. ${l.name} - ${l.score}`, 250, 40 + i * 20);
+  leaderboard.forEach((l,i)=>{
+    ctx.fillStyle = l.name===playerName?"#0f0":"#fff";
+    ctx.fillText(`${i+1}. ${l.name} - ${l.score}`, 250, 40+i*20);
   });
 
-  // Game Over screen
   if (gameOver) {
-    ctx.fillStyle = "rgba(0,0,0,0.7)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = "#fff";
-    ctx.font = "24px monospace";
-    ctx.fillText("GAME OVER", 120, 260);
-
-    ctx.font = "14px monospace";
-    ctx.fillText("Press ENTER to Restart", 95, 300);
+    ctx.fillStyle="rgba(0,0,0,0.7)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle="#fff";
+    ctx.font="24px monospace";
+    ctx.fillText("GAME OVER",120,260);
+    ctx.font="14px monospace";
+    ctx.fillText("Press ENTER to Restart",95,300);
   }
 }
 
