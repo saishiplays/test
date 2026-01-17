@@ -1,26 +1,103 @@
-* { box-sizing: border-box; margin:0; padding:0; }
-body, html { width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:#000; font-family: monospace; overflow:hidden; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-#gameContainer { position:relative; width:400px; height:600px; }
-canvas { display:block; background:#000; border:2px solid #0f0; margin:0 auto; }
+body, html {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+  font-family: monospace;
+  overflow: hidden;
+}
 
+#gameContainer {
+  position: relative;
+  width: 400px;
+  height: 600px;
+}
+
+canvas {
+  display: block;
+  background: #000;
+  border: 2px solid #0f0;
+  margin: 0 auto;
+}
+
+/* Name Screen */
 #nameScreen {
-  position:absolute; top:0; left:0; width:100%; height:100%;
-  background: rgba(0,0,0,0.9); display:flex; justify-content:center; align-items:center; z-index:10;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
 }
+
 #nameScreen .box {
-  background:#111; padding:20px; border-radius:12px; text-align:center; box-shadow:0 0 10px #0f0;
+  background: #111;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 0 10px #0f0;
 }
-#nameScreen input { padding:6px; width:150px; margin-bottom:10px; border-radius:6px; border:1px solid #0f0; background:#000; color:#0f0; }
-#nameScreen button { padding:6px 12px; border:none; border-radius:6px; background:#0f0; color:#000; cursor:pointer; }
 
+#nameScreen input {
+  padding: 6px;
+  width: 150px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid #0f0;
+  background: #000;
+  color: #0f0;
+}
+
+#nameScreen button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #0f0;
+  color: #000;
+  cursor: pointer;
+}
+
+/* Mobile Controls */
 #mobileControls {
-  position:absolute; bottom:20px; width:100%; display:flex; justify-content:space-around; z-index:5;
-}
-#mobileControls button {
-  width:60px; height:60px; font-size:24px; border-radius:50%; border:none; background:rgba(0,255,0,0.4); color:#000; cursor:pointer;
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  z-index: 5;
 }
 
+#mobileControls button {
+  width: 60px;
+  height: 60px;
+  font-size: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,255,0,0.4);
+  color: #000;
+  cursor: pointer;
+}
+
+/* Theme Toggle */
 #themeToggle {
-  position:absolute; top:10px; right:10px; padding:6px 10px; border:none; border-radius:6px; background:rgba(0,255,0,0.5); cursor:pointer;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(0,255,0,0.5);
+  cursor: pointer;
 }
