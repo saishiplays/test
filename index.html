@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mini Jump Game</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jump Game Enhanced</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-
+<div id="gameContainer">
   <!-- NAME SCREEN -->
   <div id="nameScreen">
     <div class="box">
@@ -17,23 +17,19 @@
     </div>
   </div>
 
-  <!-- GAME CANVAS -->
-  <div id="gameContainer">
-    <canvas id="game" width="400" height="600"></canvas>
+  <!-- THEME TOGGLE -->
+  <button id="themeToggle">Toggle Theme</button>
 
-    <!-- MOBILE CONTROLS -->
-    <div id="mobileControls">
-      <button id="leftBtn">◀️</button>
-      <button id="jumpBtn">⬆️</button>
-      <button id="rightBtn">▶️</button>
-    </div>
-
-    <!-- THEME TOGGLE -->
-    <button id="themeToggle">🌓</button>
+  <!-- MOBILE CONTROLS -->
+  <div id="mobileControls">
+    <button id="leftBtn">◀</button>
+    <button id="rightBtn">▶</button>
   </div>
 
-  <!-- MODULAR GAME JS -->
-  <script type="module" src="game.js"></script>
+  <!-- GAME CANVAS -->
+  <canvas id="game" width="400" height="600"></canvas>
+</div>
 
+<script type="module" src="game.js"></script>
 </body>
 </html>
