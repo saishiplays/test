@@ -23,6 +23,25 @@ if (typeof firebase === "undefined") {
   scoresRef = db.ref("scores");
 }
 
+// ================= FIREBASE READY CHECK =================
+function firebaseReady(callback) {
+  if (typeof firebase === "undefined" || typeof scoresRef === "undefined") {
+    console.error("🔥 Firebase NOT loaded yet!");
+    return;
+  }
+
+  // Test DB connection
+  scoresRef.limitToFirst(1).once("value")
+    .then(() => {
+      console.log("🔥 Firebase is ready!");
+      callback(); // Safe to start the game
+    })
+    .catch(err => {
+      console.error("🔥 Firebase not ready yet:", err);
+      setTimeout(() => firebaseReady(callback), 500); // Retry every 500ms
+    });
+}
+
 // ================= CANVAS =================
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -48,7 +67,9 @@ images.forEach(img => {
   img.onload = () => {
     imagesLoaded++;
     console.log("🔥 Image loaded:", img.src);
-    if (imagesLoaded === images.length && gameStarted) startGame();
+    if (imagesLoaded === images.length && gameStarted) {
+      firebaseReady(startGame);
+    }
   };
 });
 
@@ -93,7 +114,9 @@ function startAfterName() {
   console.log(`🔥 Starting game for player: ${playerName}`);
   nameScreen.style.display = "none";
   gameStarted = true;
-  if (imagesLoaded === images.length) startGame();
+  if (imagesLoaded === images.length) {
+    firebaseReady(startGame);
+  }
 }
 
 if (playerName) startAfterName();
