@@ -2,45 +2,54 @@ body {
   margin:0;
   padding:0;
   font-family: monospace;
-  background: #020b1f;
-  overflow:hidden;
+  background:#020b1f;
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
   flex-direction:column;
-  color:#fff;
+  overflow:hidden;
 }
 
-#game {
-  border: 2px solid #0f0;
-  border-radius: 12px;
-  background: #020b1f;
+#gameContainer {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
 }
 
-#themeToggle {
-  margin-top: 10px;
-  padding: 6px 12px;
-  background: #111;
-  color: #0f0;
-  border: 1px solid #0f0;
-  border-radius: 6px;
-  cursor:pointer;
+canvas#game {
+  border:2px solid #0f0;
+  border-radius:12px;
+  background:#020b1f;
+}
+
+#nameScreen {
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:rgba(0,0,0,0.8);
+  padding:20px;
+  border-radius:12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  z-index:10;
 }
 
 #mobileControls {
-  margin-top: 10px;
   display:flex;
   gap:40px;
+  margin-top:10px;
 }
 
-#mobileControls button {
-  width:60px;
-  height:60px;
-  font-size:24px;
-  background:#111;
-  color:#0f0;
-  border:1px solid #0f0;
-  border-radius:12px;
+#mobileControls button, #themeToggle {
+  padding:10px 20px;
+  border-radius:10px;
+  border:none;
+  background:#0f0;
+  color:#000;
+  font-weight:bold;
   cursor:pointer;
+  font-size:18px;
 }
