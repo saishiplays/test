@@ -1,6 +1,6 @@
 console.log("🔥 GAME JS LOADED");
 
-// ================= PLAYER & GAME STATE =================
+// ================= GLOBALS =================
 let playerName = localStorage.getItem("playerName") || "";
 let gameStarted = false;
 let gameOver = false;
@@ -12,13 +12,17 @@ let moveLeft = false;
 let moveRight = false;
 let leaderboard = [];
 
-// ================= CANVAS =================
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-// ================= LOADING SCREEN =================
 const loadingScreen = document.getElementById("loadingScreen");
 const loadingText = document.getElementById("loadingText");
+const nameScreen = document.getElementById("nameScreen");
+const startBtn = document.getElementById("startBtn");
+
+let imagesReady = false;
+let firebaseReady = false;
+let imagesLoaded = 0;
 let loadingTextInterval;
 
 // ================= PLATFORMS =================
@@ -54,8 +58,6 @@ const breakImg = new Image();
 breakImg.src = "assets/platform_break.png";
 
 const images = [playerImg, platformImg, breakImg];
-let imagesLoaded = 0;
-let imagesReady = false;
 
 images.forEach(img => {
   img.onload = () => {
@@ -68,46 +70,7 @@ images.forEach(img => {
   };
 });
 
-// ================= NAME SCREEN =================
-const nameScreen = document.getElementById("nameScreen");
-const startBtn = document.getElementById("startBtn");
-
-function startAfterName() {
-  console.log(`🔥 Starting game for player: ${playerName}`);
-  nameScreen.style.display = "none";
-  gameStarted = true;
-  checkReadyToStart();
-}
-
-startBtn.onclick = () => {
-  const val = document.getElementById("playerNameInput").value.trim();
-  if (!val) return;
-  playerName = val;
-  localStorage.setItem("playerName", playerName);
-  startAfterName();
-};
-
-if (playerName) startAfterName();
-else nameScreen.style.display = "flex";
-
-// ================= CONTROLS =================
-document.addEventListener("keydown", e => {
-  if (e.key === "ArrowLeft") moveLeft = true;
-  if (e.key === "ArrowRight") moveRight = true;
-  if (e.key === "Enter" && gameOver) restart();
-});
-document.addEventListener("keyup", e => {
-  if (e.key === "ArrowLeft") moveLeft = false;
-  if (e.key === "ArrowRight") moveRight = false;
-});
-
-// ================= HELPERS =================
-function wrapPlayer() {
-  if (player.x > canvas.width) player.x = -player.width;
-  if (player.x + player.width < 0) player.x = canvas.width;
-}
-
-// ================= FIREBASE CONFIG =================
+// ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyCmfqvZ43D2Q35yWk1eb7vScmzv6DXz9xU",
   authDomain: "test-3de69.firebaseapp.com",
@@ -119,38 +82,59 @@ const firebaseConfig = {
   measurementId: "G-V0LCZRWRN6"
 };
 
-// ================= FIREBASE VARIABLES =================
 let db, scoresRef;
-let firebaseReady = false;
 
-// ================= FIREBASE INIT =================
 function initFirebase() {
   console.log("🔥 Initializing Firebase...");
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
   scoresRef = db.ref("scores");
   firebaseReady = true;
-  console.log("🔥 Firebase initialized!");
+  console.log("🔥 Firebase ready!");
   checkReadyToStart();
 }
 
-// ================= READY CHECK =================
+// ================= NAME SCREEN =================
+startBtn.onclick = () => {
+  const val = document.getElementById("playerNameInput").value.trim();
+  if (!val) return;
+  playerName = val;
+  localStorage.setItem("playerName", playerName);
+  startAfterName();
+};
+
+function startAfterName() {
+  gameStarted = true;
+  nameScreen.style.display = "none";
+  checkReadyToStart();
+}
+
+if (playerName) startAfterName();
+else nameScreen.style.display = "flex";
+
+// ================= LOADING TEXT ANIMATION =================
+function startLoadingAnimation() {
+  let dots = 0;
+  loadingTextInterval = setInterval(() => {
+    dots = (dots + 1) % 4;
+    loadingText.innerText = `Loading Game${'.'.repeat(dots)}`;
+  }, 500);
+}
+
+// ================= CHECK IF READY =================
 function checkReadyToStart() {
   if (!firebaseReady || !imagesReady || !gameStarted) return;
 
-  // Smooth fade-out animation
   if (loadingScreen) {
     loadingScreen.classList.add("hide");
     clearInterval(loadingTextInterval);
-    setTimeout(() => {
-      loadingScreen.style.display = "none";
-    }, 800); // matches CSS transition
+    setTimeout(() => { loadingScreen.style.display = "none"; }, 800);
   }
 
   startGame();
 }
 
-// ================= FIREBASE SCORE =================
+// ================= FIREBASE FUNCTIONS =================
 function saveScoreFirebase() {
   if (!playerName || !scoresRef) return;
   scoresRef.child(playerName).get().then(snapshot => {
@@ -180,6 +164,11 @@ function restart() {
   player.x = 180;
   player.y = 300;
   initPlatforms();
+}
+
+function wrapPlayer() {
+  if (player.x > canvas.width) player.x = -player.width;
+  if (player.x + player.width < 0) player.x = canvas.width;
 }
 
 function update() {
@@ -259,7 +248,7 @@ function draw() {
   }
 }
 
-// ================= LOOP =================
+// ================= GAME LOOP =================
 function startGame() {
   initPlatforms();
   listenLeaderboard();
@@ -272,15 +261,16 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-// ================= LOADING TEXT ANIMATION =================
-function startLoadingAnimation() {
-  let dots = 0;
-  loadingTextInterval = setInterval(() => {
-    if (!loadingText) return;
-    dots = (dots + 1) % 4;
-    loadingText.innerText = `Loading Game${'.'.repeat(dots)}`;
-  }, 500);
-}
+// ================= CONTROLS =================
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft") moveLeft = true;
+  if (e.key === "ArrowRight") moveRight = true;
+  if (e.key === "Enter" && gameOver) restart();
+});
+document.addEventListener("keyup", e => {
+  if (e.key === "ArrowLeft") moveLeft = false;
+  if (e.key === "ArrowRight") moveRight = false;
+});
 
 // ================= START =================
 window.addEventListener("load", () => {
