@@ -1,36 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
   <title>Mini Jump Game</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- LOADING SCREEN -->
-  <div id="loadingScreen">
-    <h2 id="loadingText">Loading Game...</h2>
-  </div>
-
-  <!-- NAME SCREEN -->
-  <div id="nameScreen">
-    <div class="box">
-      <h2>Enter Your Name</h2>
-      <input id="playerNameInput" maxlength="12" placeholder="Player name">
-      <button id="startBtn">Start</button>
-    </div>
-  </div>
-
-  <!-- GAME CANVAS -->
   <canvas id="game" width="400" height="600"></canvas>
 
-  <!-- FIREBASE -->
-  <script src="https://www.gstatic.com/firebasejs/10.15.0/firebase-app-compat.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/10.15.0/firebase-database-compat.js" defer></script>
-
-  <!-- GAME JS -->
-  <script src="game.js" defer></script>
+  <!-- Game (Firebase included inside) -->
+  <script type="module" src="game.js"></script>
 
 </body>
 </html>
