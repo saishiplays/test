@@ -1,60 +1,47 @@
 body {
-  margin: 0;
-  padding: 0;
+  margin:0;
+  padding:0;
   font-family: monospace;
-  background: #000;
-  color: #fff;
-  overflow: hidden;
+  background: #020b1f;
+  overflow:hidden;
 }
 
 #nameScreen {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0,0,0,0.85);
+  position:absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+  display:flex; justify-content:center; align-items:center;
+  background: rgba(0,0,0,0.8);
 }
 
 #nameScreen .box {
-  background: rgba(20,20,20,0.9);
-  padding: 20px;
-  border-radius: 12px;
-  text-align: center;
+  background:#111;
+  padding:20px;
+  border-radius:12px;
+  text-align:center;
+  color:#fff;
 }
 
 #nameScreen input {
-  padding: 8px;
-  width: 150px;
-  margin-bottom: 10px;
+  width:120px;
+  padding:5px;
+  margin-top:10px;
+  text-align:center;
 }
 
-#nameScreen button {
-  padding: 6px 12px;
-  cursor: pointer;
+#themeToggle {
+  position:absolute; top:10px; left:10px;
+  padding:6px 12px; border:none; border-radius:6px;
+  background:#222; color:#fff; cursor:pointer;
 }
 
-canvas {
-  display: block;
-  margin: 0 auto;
-  background: #000;
+#mobileControls {
+  position:absolute; bottom:20px; width:100%; display:flex; justify-content:center; gap:40px;
 }
 
-#controls {
-  position: absolute;
-  bottom: 10px;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-#controls button {
-  padding: 10px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid #fff;
-  color: #fff;
-  font-size: 18px;
+#mobileControls button {
+  width:50px; height:50px;
+  border:none; border-radius:50%;
+  background:rgba(0,255,128,0.3);
+  color:#fff; font-size:24px;
 }
