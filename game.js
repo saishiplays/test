@@ -1,54 +1,5 @@
 console.log("🔥 GAME JS LOADED");
 
-// ================= FIREBASE CONFIG =================
-const firebaseConfig = {
-  apiKey: "AIzaSyCmfqvZ43D2Q35yWk1eb7vScmzv6DXz9xU",
-  authDomain: "test-3de69.firebaseapp.com",
-  projectId: "test-3de69",
-  databaseURL: "https://test-3de69-default-rtdb.asia-southeast1.firebasedatabase.app",
-  storageBucket: "test-3de69.appspot.com",
-  messagingSenderId: "361141862152",
-  appId: "1:361141862152:web:1a897b3932a7d892a7f6bd",
-  measurementId: "G-V0LCZRWRN6"
-};
-
-// ================= FIREBASE VARIABLES =================
-let db, scoresRef;
-
-// ================= FIREBASE INITIALIZATION =================
-function initFirebase() {
-  if (typeof firebase === "undefined") {
-    console.error("🔥 Firebase NOT loaded! Check script order.");
-    return;
-  }
-  console.log("🔥 Firebase loaded!");
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.database();
-  scoresRef = db.ref("scores");
-}
-
-// ================= FIREBASE READY CHECK =================
-function firebaseReady(callback) {
-  if (!scoresRef) {
-    console.error("🔥 Firebase not ready yet!");
-    return;
-  }
-
-  scoresRef.limitToFirst(1).once("value")
-    .then(() => {
-      console.log("🔥 Firebase is ready!");
-      callback();
-    })
-    .catch(err => {
-      console.warn("🔥 Firebase not ready, retrying...", err);
-      setTimeout(() => firebaseReady(callback), 500);
-    });
-}
-
-// ================= CANVAS =================
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-
 // ================= PLAYER & GAME STATE =================
 let playerName = localStorage.getItem("playerName") || "";
 let gameStarted = false;
@@ -59,6 +10,11 @@ const gravity = 0.4;
 const player = { x: 180, y: 300, width: 40, height: 40, speed: 6 };
 let moveLeft = false;
 let moveRight = false;
+let leaderboard = [];
+
+// ================= CANVAS =================
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
 // ================= PLATFORMS =================
 const platformCount = 8;
@@ -94,13 +50,15 @@ breakImg.src = "assets/platform_break.png";
 
 const images = [playerImg, platformImg, breakImg];
 let imagesLoaded = 0;
+let imagesReady = false;
 
 images.forEach(img => {
   img.onload = () => {
     imagesLoaded++;
     console.log("🔥 Image loaded:", img.src);
-    if (imagesLoaded === images.length && gameStarted) {
-      firebaseReady(startGame);
+    if (imagesLoaded === images.length) {
+      imagesReady = true;
+      if (gameStarted) firebaseAndImagesReady();
     }
   };
 });
@@ -113,9 +71,7 @@ function startAfterName() {
   console.log(`🔥 Starting game for player: ${playerName}`);
   nameScreen.style.display = "none";
   gameStarted = true;
-  if (imagesLoaded === images.length) {
-    firebaseReady(startGame);
-  }
+  firebaseAndImagesReady();
 }
 
 startBtn.onclick = () => {
@@ -125,6 +81,9 @@ startBtn.onclick = () => {
   localStorage.setItem("playerName", playerName);
   startAfterName();
 };
+
+if (playerName) startAfterName();
+else nameScreen.style.display = "flex";
 
 // ================= CONTROLS =================
 document.addEventListener("keydown", e => {
@@ -141,6 +100,43 @@ document.addEventListener("keyup", e => {
 function wrapPlayer() {
   if (player.x > canvas.width) player.x = -player.width;
   if (player.x + player.width < 0) player.x = canvas.width;
+}
+
+// ================= FIREBASE CONFIG =================
+const firebaseConfig = {
+  apiKey: "AIzaSyCmfqvZ43D2Q35yWk1eb7vScmzv6DXz9xU",
+  authDomain: "test-3de69.firebaseapp.com",
+  projectId: "test-3de69",
+  databaseURL: "https://test-3de69-default-rtdb.asia-southeast1.firebasedatabase.app",
+  storageBucket: "test-3de69.appspot.com",
+  messagingSenderId: "361141862152",
+  appId: "1:361141862152:web:1a897b3932a7d892a7f6bd",
+  measurementId: "G-V0LCZRWRN6"
+};
+
+// ================= FIREBASE VARIABLES =================
+let db, scoresRef;
+let firebaseReadyFlag = false;
+
+// ================= FIREBASE INIT AFTER SCRIPTS LOAD =================
+function initFirebase() {
+  if (typeof firebase === "undefined") {
+    console.error("🔥 Firebase NOT loaded yet!");
+    return;
+  }
+  console.log("🔥 Initializing Firebase...");
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  scoresRef = db.ref("scores");
+  firebaseReadyFlag = true;
+  console.log("🔥 Firebase initialized!");
+  firebaseAndImagesReady();
+}
+
+// ================= WAIT UNTIL BOTH FIREBASE + IMAGES =================
+function firebaseAndImagesReady() {
+  if (!firebaseReadyFlag || !imagesReady || !gameStarted) return;
+  startGame();
 }
 
 // ================= FIREBASE SCORE =================
@@ -266,9 +262,7 @@ function loop() {
 }
 
 // ================= START =================
-window.addEventListener("DOMContentLoaded", () => {
-  console.log("🔥 DOM fully loaded, initializing Firebase...");
+// Wait until window is fully loaded to initialize Firebase
+window.addEventListener("load", () => {
   initFirebase();
-
-  if (playerName) startAfterName();
 });
