@@ -1,51 +1,45 @@
-console.log("🔥 GAME JS LOADED");
+/* ================= FIREBASE (MODULAR) ================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.15.0/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  set,
+  get,
+  onValue,
+  query,
+  orderByChild,
+  limitToLast
+} from "https://www.gstatic.com/firebasejs/10.15.0/firebase-database.js";
 
-/* ================= FIREBASE ================= */
-let db = null;
-let scoresRef = null;
-let firebaseReady = false;
+console.log("🔥 GAME JS LOADED (MODULAR)");
 
 const firebaseConfig = {
   apiKey: "AIzaSyCmfqvZ43D2Q35yWk1eb7vScmzv6DXz9xU",
   authDomain: "test-3de69.firebaseapp.com",
-  projectId: "test-3de69",
   databaseURL: "https://test-3de69-default-rtdb.asia-southeast1.firebasedatabase.app/",
+  projectId: "test-3de69",
   storageBucket: "test-3de69.firebasestorage.app",
   messagingSenderId: "361141862152",
   appId: "1:361141862152:web:1a897b3932a7d892a7f6bd"
 };
 
-function initFirebase() {
-  if (typeof firebase === "undefined") {
-    console.error("🔥 Firebase NOT loaded!");
-    return;
-  }
+/* Init Firebase */
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const scoresRef = ref(db, "scores");
 
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-    console.log("🔥 Firebase initialized");
-  }
-
-  db = firebase.database();
-  scoresRef = db.ref("scores");
-  firebaseReady = true;
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("🔥 DOM loaded → init Firebase");
-  initFirebase();
-});
+console.log("🔥 Firebase modular initialized");
 
 /* ================= CANVAS ================= */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-/* ================= GAME STATE ================= */
-let playerName = localStorage.getItem("playerName") || "";
-let gameStarted = false;
+/* ================= STATE ================= */
+let playerName = localStorage.getItem("playerName") || "Player";
+let gameStarted = true;
 let gameOver = false;
 let score = 0;
-let velocityY = 0;
+let velocityY = -10;
 const gravity = 0.4;
 
 const player = { x: 180, y: 300, width: 40, height: 40, speed: 6 };
@@ -57,18 +51,6 @@ const playerImg = new Image();
 playerImg.src = "assets/player.gif";
 const platformImg = new Image();
 platformImg.src = "assets/platform.png";
-const breakImg = new Image();
-breakImg.src = "assets/platform_break.png";
-
-const images = [playerImg, platformImg, breakImg];
-let imagesLoaded = 0;
-
-images.forEach(img => {
-  img.onload = () => {
-    imagesLoaded++;
-    if (imagesLoaded === images.length && gameStarted) startGame();
-  };
-});
 
 /* ================= PLATFORMS ================= */
 const platformCount = 8;
@@ -80,9 +62,7 @@ function createPlatform(y) {
     x: Math.random() * 300,
     y,
     width: 100,
-    height: 16,
-    type: Math.random() < 0.2 ? "break" : "static",
-    broken: false
+    height: 16
   };
 }
 
@@ -94,22 +74,22 @@ function initPlatforms() {
 }
 
 /* ================= FIREBASE SCORE ================= */
-function saveScoreFirebase() {
-  if (!firebaseReady || !playerName) return;
+async function saveScore() {
+  if (!playerName) return;
 
-  scoresRef.child(playerName).get().then(snapshot => {
-    const prev = snapshot.val();
-    if (!prev || score > prev.score) {
-      scoresRef.child(playerName).set({ name: playerName, score });
-      console.log("🔥 Score saved:", score);
-    }
-  });
+  const userRef = ref(db, `scores/${playerName}`);
+  const snap = await get(userRef);
+  const prev = snap.val();
+
+  if (!prev || score > prev.score) {
+    await set(userRef, { name: playerName, score });
+    console.log("🔥 Score saved:", score);
+  }
 }
 
 function listenLeaderboard() {
-  if (!firebaseReady) return;
-
-  scoresRef.orderByChild("score").limitToLast(5).on("value", snap => {
+  const q = query(scoresRef, orderByChild("score"), limitToLast(5));
+  onValue(q, snap => {
     leaderboard = [];
     snap.forEach(s => leaderboard.push(s.val()));
     leaderboard.sort((a, b) => b.score - a.score);
@@ -120,7 +100,7 @@ function listenLeaderboard() {
 let leaderboard = [];
 
 function update() {
-  if (!gameStarted || gameOver) return;
+  if (gameOver) return;
 
   if (moveLeft) player.x -= player.speed;
   if (moveRight) player.x += player.speed;
@@ -130,7 +110,6 @@ function update() {
 
   platforms.forEach(p => {
     if (
-      !p.broken &&
       player.y + player.height > p.y &&
       player.y + player.height < p.y + p.height &&
       player.x + player.width > p.x &&
@@ -138,7 +117,6 @@ function update() {
       velocityY > 0
     ) {
       velocityY = -12;
-      if (p.type === "break") p.broken = true;
     }
   });
 
@@ -150,7 +128,7 @@ function update() {
 
   if (player.y > canvas.height) {
     gameOver = true;
-    saveScoreFirebase();
+    saveScore();
   }
 }
 
@@ -159,24 +137,22 @@ function draw() {
   ctx.drawImage(playerImg, player.x, player.y, 40, 40);
 
   platforms.forEach(p => {
-    if (!p.broken) ctx.drawImage(platformImg, p.x, p.y, p.width, p.height);
+    ctx.drawImage(platformImg, p.x, p.y, p.width, p.height);
   });
 
   ctx.fillStyle = "#fff";
   ctx.fillText(`Score: ${score}`, 10, 20);
+
+  ctx.fillText("Leaderboard:", 250, 20);
+  leaderboard.forEach((l, i) => {
+    ctx.fillText(`${i + 1}. ${l.name} - ${l.score}`, 250, 40 + i * 20);
+  });
 }
 
 function loop() {
   update();
   draw();
   requestAnimationFrame(loop);
-}
-
-function startGame() {
-  initPlatforms();
-  listenLeaderboard();
-  velocityY = -10;
-  loop();
 }
 
 /* ================= INPUT ================= */
@@ -192,7 +168,6 @@ document.addEventListener("keyup", e => {
 });
 
 /* ================= START ================= */
-if (playerName) {
-  gameStarted = true;
-  if (imagesLoaded === images.length) startGame();
-}
+initPlatforms();
+listenLeaderboard();
+loop();
