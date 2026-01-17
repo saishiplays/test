@@ -1,5 +1,5 @@
 /* ================= FIREBASE (MODULAR) ================= */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.15.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getDatabase,
   ref,
@@ -9,7 +9,7 @@ import {
   query,
   orderByChild,
   limitToLast
-} from "https://www.gstatic.com/firebasejs/10.15.0/firebase-database.js";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
 console.log("🔥 GAME JS LOADED (MODULAR)");
 
