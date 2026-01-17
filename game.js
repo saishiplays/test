@@ -1,7 +1,19 @@
 /* ================= FIREBASE (MODULAR) ================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, query, orderByChild } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {
+  getDatabase,
+  ref,
+  set,
+  get,
+  onValue,
+  query,
+  orderByChild
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+import {
+  getAuth,
+  signInAnonymously,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 /* ================= CONFIG ================= */
 const firebaseConfig = {
@@ -9,7 +21,7 @@ const firebaseConfig = {
   authDomain: "test-3de69.firebaseapp.com",
   databaseURL: "https://test-3de69-default-rtdb.asia-southeast1.firebasedatabase.app/",
   projectId: "test-3de69",
-  storageBucket: "test-3de69.firebasestorage.app",
+  storageBucket: "test-3de69.appspot.com", // FIXED
   messagingSenderId: "361141862152",
   appId: "1:361141862152:web:1a897b3932a7d892a7f6bd"
 };
@@ -23,15 +35,12 @@ let uid = null;
 signInAnonymously(auth);
 onAuthStateChanged(auth, user => uid = user?.uid || null);
 
-/* ================= DOM ================= */
+/* ================= DOM ELEMENTS ================= */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const nameScreen = document.getElementById("nameScreen");
 const startBtn = document.getElementById("startBtn");
 const nameInput = document.getElementById("playerNameInput");
-const themeToggle = document.getElementById("themeToggle");
-const leftBtn = document.getElementById("leftBtn");
-const rightBtn = document.getElementById("rightBtn");
 
 /* ================= STATE ================= */
 let playerName = localStorage.getItem("playerName") || "";
@@ -43,9 +52,6 @@ let bestScore = Number(localStorage.getItem("bestScore") || 0);
 let velocityY = -10;
 let difficulty = 1;
 let leaderboard = [];
-let theme = localStorage.getItem("theme") || "dark";
-
-/* ================= PLAYER ================= */
 const player = { x: 180, y: 300, width: 40, height: 40, speed: 6 };
 let moveLeft = false;
 let moveRight = false;
@@ -115,13 +121,6 @@ function listenLeaderboard(){
   });
 }
 
-/* ================= START GAME ================= */
-function startGame() {
-  initPlatforms();
-  listenLeaderboard();
-  loop();
-}
-
 /* ================= NAME SCREEN ================= */
 function startAfterName(){
   const val=nameInput.value.trim();
@@ -134,22 +133,6 @@ function startAfterName(){
 if(playerName) startAfterName();
 else nameScreen.style.display="flex";
 startBtn.onclick=startAfterName;
-
-/* ================= MOBILE CONTROLS ================= */
-if(leftBtn && rightBtn){
-  leftBtn.ontouchstart = () => moveLeft=true;
-  rightBtn.ontouchstart = () => moveRight=true;
-  leftBtn.ontouchend = () => moveLeft=false;
-  rightBtn.ontouchend = () => moveRight=false;
-}
-
-/* ================= THEME ================= */
-if(themeToggle){
-  themeToggle.onclick = () => {
-    theme = theme==="dark"?"dark-neon":"dark";
-    localStorage.setItem("theme",theme);
-  };
-}
 
 /* ================= INPUT ================= */
 document.addEventListener("keydown", e=>{
@@ -226,7 +209,7 @@ function update(){
 
 /* ================= DRAW ================= */
 function draw(){
-  ctx.fillStyle=theme==="dark"?"#000":"#020b1f";
+  ctx.fillStyle="#000";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
   ctx.drawImage(playerImg,player.x,player.y,player.width,player.height);
@@ -261,3 +244,10 @@ function draw(){
 
 /* ================= LOOP ================= */
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
+
+/* ================= START ================= */
+function startGame() {
+  initPlatforms();
+  listenLeaderboard();
+  loop();
+}
