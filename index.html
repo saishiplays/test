@@ -1,20 +1,32 @@
-<!-- Mobile Controls -->
-<div id="mobileControls">
-  <button id="leftBtn">◀</button>
-  <button id="rightBtn">▶</button>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Jump Game</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { margin:0; background:#000; color:#fff; font-family:monospace; }
+    #nameScreen { 
+      display:flex; justify-content:center; align-items:center; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); 
+      flex-direction:column; gap:10px; 
+    }
+    #nameScreen input { padding:6px; font-size:16px; width:140px; }
+    #nameScreen button { padding:6px 12px; font-size:16px; cursor:pointer; }
+  </style>
+</head>
+<body>
 
-<!-- Theme toggle -->
-<button id="themeToggle" style="position:fixed;top:10px;right:10px;z-index:10;">
-  🎨
-</button>
+  <!-- Name Input -->
+  <div id="nameScreen">
+    <input id="playerNameInput" maxlength="12" placeholder="Player name" />
+    <button id="startBtn">Start</button>
+  </div>
 
-<!-- Canvas & Name screen remain exactly as before -->
-<canvas id="game" width="400" height="600"></canvas>
-<div id="nameScreen">
-  <input id="playerNameInput" maxlength="12" placeholder="Player name" />
-  <button id="startBtn">Start</button>
-</div>
+  <!-- Game Canvas -->
+  <canvas id="game" width="400" height="600"></canvas>
 
-<!-- IMPORTANT: script tag must be modular -->
-<script type="module" src="game.js"></script>
+  <!-- Load JS -->
+  <script type="module" src="game.js"></script>
+</body>
+</html>
