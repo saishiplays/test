@@ -5,7 +5,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCmfqvZ43D2Q35yWk1eb7vScmzv6DXz9xU",
   authDomain: "test-3de69.firebaseapp.com",
   projectId: "test-3de69",
-  dataURL:"https://test-3de69-default-rtdb.asia-southeast1.firebasedatabase.app",
+  dataURL:"https://test-3de69-default-rtdb.asia-southeast1.firebasedatabase.app/",
   storageBucket: "test-3de69.firebasestorage.app",
   messagingSenderId: "361141862152",
   appId: "1:361141862152:web:1a897b3932a7d892a7f6bd",
