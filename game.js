@@ -13,8 +13,7 @@ const firebaseConfig = {
 };
 
 // ================= FIREBASE VARIABLES =================
-let db;
-let scoresRef;
+let db, scoresRef;
 
 // ================= FIREBASE INITIALIZATION =================
 function initFirebase() {
@@ -38,11 +37,11 @@ function firebaseReady(callback) {
   scoresRef.limitToFirst(1).once("value")
     .then(() => {
       console.log("🔥 Firebase is ready!");
-      callback(); // Safe to start the game
+      callback();
     })
     .catch(err => {
       console.warn("🔥 Firebase not ready, retrying...", err);
-      setTimeout(() => firebaseReady(callback), 500); // Retry in 500ms
+      setTimeout(() => firebaseReady(callback), 500);
     });
 }
 
