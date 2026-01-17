@@ -1,19 +1,7 @@
 /* ================= FIREBASE (MODULAR) ================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {
-  getDatabase,
-  ref,
-  set,
-  get,
-  onValue,
-  query,
-  orderByChild
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
-import {
-  getAuth,
-  signInAnonymously,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getDatabase, ref, set, get, onValue, query, orderByChild } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 /* ================= CONFIG ================= */
 const firebaseConfig = {
@@ -21,7 +9,7 @@ const firebaseConfig = {
   authDomain: "test-3de69.firebaseapp.com",
   databaseURL: "https://test-3de69-default-rtdb.asia-southeast1.firebasedatabase.app/",
   projectId: "test-3de69",
-  storageBucket: "test-3de69.appspot.com", // FIXED
+  storageBucket: "test-3de69.appspot.com",
   messagingSenderId: "361141862152",
   appId: "1:361141862152:web:1a897b3932a7d892a7f6bd"
 };
@@ -41,6 +29,9 @@ const ctx = canvas.getContext("2d");
 const nameScreen = document.getElementById("nameScreen");
 const startBtn = document.getElementById("startBtn");
 const nameInput = document.getElementById("playerNameInput");
+const themeToggle = document.getElementById("themeToggle");
+const leftBtn = document.getElementById("leftBtn");
+const rightBtn = document.getElementById("rightBtn");
 
 /* ================= STATE ================= */
 let playerName = localStorage.getItem("playerName") || "";
@@ -52,9 +43,14 @@ let bestScore = Number(localStorage.getItem("bestScore") || 0);
 let velocityY = -10;
 let difficulty = 1;
 let leaderboard = [];
+let theme = "dark";
+
+/* ================= PLAYER ================= */
 const player = { x: 180, y: 300, width: 40, height: 40, speed: 6 };
 let moveLeft = false;
 let moveRight = false;
+let playerScale = { x:1, y:1 };
+let targetX = player.x;
 
 /* ================= IMAGES ================= */
 const playerImg = new Image(); playerImg.src = "assets/player.gif";
@@ -65,7 +61,7 @@ const images = [playerImg, platformImg, breakImg];
 let imagesLoaded = 0;
 images.forEach(img => img.onload = () => {
   imagesLoaded++;
-  if (imagesLoaded === images.length && gameStarted) startGame();
+  if(imagesLoaded===images.length && gameStarted) startGame();
 });
 
 /* ================= PLATFORMS ================= */
@@ -73,26 +69,26 @@ const platformGap = 80;
 const platformCount = 8;
 let platforms = [];
 
-function createPlatform(y) {
-  let type = "static";
-  if (score > 1500 && Math.random() < 0.35) type = "break";
-  else if (score > 800 && Math.random() < 0.5) type = "move";
+function createPlatform(y){
+  let type="static";
+  if(score>1500 && Math.random()<0.35) type="break";
+  else if(score>800 && Math.random()<0.5) type="move";
   return { x: Math.random()*300, y, width:100, height:16, type, dir: Math.random()<0.5?-1:1, broken:false };
 }
 
-function initPlatforms() {
-  platforms = [];
-  for (let i=0;i<platformCount;i++) platforms.push(createPlatform(canvas.height-i*platformGap));
+function initPlatforms(){
+  platforms=[];
+  for(let i=0;i<platformCount;i++) platforms.push(createPlatform(canvas.height-i*platformGap));
 }
 
 /* ================= WEEKLY RESET ================= */
-function getWeekKey() {
-  const now = new Date();
-  const onejan = new Date(now.getFullYear(),0,1);
-  const week = Math.ceil((((now-onejan)/86400000)+onejan.getDay()+1)/7);
+function getWeekKey(){
+  const now=new Date();
+  const onejan=new Date(now.getFullYear(),0,1);
+  const week=Math.ceil((((now-onejan)/86400000)+onejan.getDay()+1)/7);
   return `${now.getFullYear()}-W${week}`;
 }
-const currentWeek = getWeekKey();
+const currentWeek=getWeekKey();
 
 /* ================= ANTI-CHEAT ================= */
 function validScore(s){ return Number.isInteger(s) && s>=0 && s<=999999; }
@@ -100,16 +96,16 @@ function validScore(s){ return Number.isInteger(s) && s>=0 && s<=999999; }
 /* ================= FIREBASE SCORE ================= */
 async function saveScore(){
   if(!uid || !validScore(score)) return;
-  const userRef = ref(db, `scores/${uid}`);
-  const snap = await get(userRef);
-  const prev = snap.val();
-  if(!prev || score > prev.score){
+  const userRef=ref(db, `scores/${uid}`);
+  const snap=await get(userRef);
+  const prev=snap.val();
+  if(!prev || score>prev.score){
     await set(userRef, { name: displayName, score, week: currentWeek });
   }
 }
 
 function listenLeaderboard(){
-  const q = query(ref(db,"scores"), orderByChild("week"));
+  const q=query(ref(db,"scores"), orderByChild("week"));
   onValue(q, snap=>{
     leaderboard=[];
     snap.forEach(s=>{
@@ -117,7 +113,7 @@ function listenLeaderboard(){
       if(v.week===currentWeek) leaderboard.push(v);
     });
     leaderboard.sort((a,b)=>b.score-b.score);
-    leaderboard = leaderboard.slice(0,5);
+    leaderboard=leaderboard.slice(0,5);
   });
 }
 
@@ -133,6 +129,18 @@ function startAfterName(){
 if(playerName) startAfterName();
 else nameScreen.style.display="flex";
 startBtn.onclick=startAfterName;
+
+/* ================= MOBILE CONTROLS ================= */
+leftBtn.ontouchstart=()=>moveLeft=true;
+rightBtn.ontouchstart=()=>moveRight=true;
+leftBtn.ontouchend=()=>moveLeft=false;
+rightBtn.ontouchend=()=>moveRight=false;
+
+/* ================= THEME ================= */
+themeToggle.onclick=()=>{
+  theme = theme==="dark"?"dark-neon":"dark";
+  localStorage.setItem("theme",theme);
+};
 
 /* ================= INPUT ================= */
 document.addEventListener("keydown", e=>{
@@ -163,8 +171,11 @@ function restart(){
 function update(){
   if(!gameStarted || gameOver) return;
 
-  if(moveLeft) player.x-=player.speed;
-  if(moveRight) player.x+=player.speed;
+  // smooth horizontal movement
+  let target=player.x;
+  if(moveLeft) target-=player.speed;
+  if(moveRight) target+=player.speed;
+  player.x+=(target-player.x)*0.2;
 
   velocityY+=0.4;
   player.y+=velocityY;
@@ -175,8 +186,8 @@ function update(){
 
   platforms.forEach(p=>{
     if(p.type==="move"){
-      p.x += p.dir*(1.2+difficulty*0.4);
-      if(p.x<=0 || p.x+p.width>=canvas.width) p.dir*=-1;
+      p.x+=p.dir*(1.2+difficulty*0.4);
+      if(p.x<=0||p.x+p.width>=canvas.width) p.dir*=-1;
     }
     if(!p.broken &&
        player.y+player.height>p.y &&
@@ -186,8 +197,14 @@ function update(){
        velocityY>0){
       velocityY=-12;
       if(p.type==="break") p.broken=true;
+      // squish effect
+      playerScale.x=1.2; playerScale.y=0.8;
     }
   });
+
+  // jumping stretch
+  if(velocityY<0){ playerScale.x=0.9; playerScale.y=1.1; }
+  else if(velocityY>0){ playerScale.x=1; playerScale.y=1; }
 
   if(player.y<250){
     const diff=250-player.y;
@@ -209,15 +226,36 @@ function update(){
 
 /* ================= DRAW ================= */
 function draw(){
-  ctx.fillStyle="#000";
+  // background gradient
+  let gradient = ctx.createLinearGradient(0,0,0,canvas.height);
+  gradient.addColorStop(0,"#0b1d3c");
+  gradient.addColorStop(1,"#020b1f");
+  ctx.fillStyle = gradient;
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  ctx.drawImage(playerImg,player.x,player.y,player.width,player.height);
-
+  // platforms
   platforms.forEach(p=>{
-    if(!p.broken) ctx.drawImage(p.type==="break"?breakImg:platformImg,p.x,p.y,p.width,p.height);
+    if(!p.broken){
+      ctx.shadowColor="rgba(0,255,128,0.3)";
+      ctx.shadowBlur=8;
+      ctx.drawImage(p.type==="break"?breakImg:platformImg,p.x,p.y,p.width,p.height);
+    }
   });
+  ctx.shadowBlur=0;
 
+  // player with squish/stretch
+  ctx.save();
+  ctx.translate(player.x+player.width/2, player.y+player.height/2);
+  ctx.scale(playerScale.x, playerScale.y);
+  ctx.drawImage(playerImg,-player.width/2,-player.height/2,player.width,player.height);
+  ctx.restore();
+
+  // UI boxes
+  ctx.fillStyle="rgba(0,0,0,0.5)";
+  ctx.fillRect(5,5,130,100);
+  ctx.fillRect(235,5,150,130);
+
+  // texts
   ctx.fillStyle="#fff";
   ctx.font="16px monospace";
   ctx.fillText(`User: ${displayName}`,10,20);
@@ -246,7 +284,7 @@ function draw(){
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
 /* ================= START ================= */
-function startGame() {
+function startGame(){
   initPlatforms();
   listenLeaderboard();
   loop();
