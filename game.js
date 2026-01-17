@@ -1,19 +1,7 @@
 /* ================= FIREBASE (MODULAR) ================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {
-  getDatabase,
-  ref,
-  set,
-  get,
-  onValue,
-  query,
-  orderByChild
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
-import {
-  getAuth,
-  signInAnonymously,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getDatabase, ref, set, get, onValue, query, orderByChild } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 /* ================= CONFIG ================= */
 const firebaseConfig = {
@@ -41,11 +29,6 @@ const ctx = canvas.getContext("2d");
 const nameScreen = document.getElementById("nameScreen");
 const startBtn = document.getElementById("startBtn");
 const nameInput = document.getElementById("playerNameInput");
-
-/* Add these to your HTML! */
-const themeToggle = document.getElementById("themeToggle");
-const leftBtn = document.getElementById("leftBtn");
-const rightBtn = document.getElementById("rightBtn");
 
 /* ================= STATE ================= */
 let playerName = localStorage.getItem("playerName") || "";
@@ -134,24 +117,12 @@ function startAfterName(){
   if(val){ playerName=val; displayName=val; localStorage.setItem("playerName",val);}
   nameScreen.style.display="none";
   gameStarted=true;
-  startGame();
+  if(imagesLoaded===images.length) startGame();
 }
 
 if(playerName) startAfterName();
 else nameScreen.style.display="flex";
 startBtn.onclick=startAfterName;
-
-/* ================= MOBILE CONTROLS ================= */
-leftBtn.ontouchstart = () => moveLeft=true;
-rightBtn.ontouchstart = () => moveRight=true;
-leftBtn.ontouchend = () => moveLeft=false;
-rightBtn.ontouchend = () => moveRight=false;
-
-/* ================= THEME ================= */
-themeToggle.onclick = () => {
-  theme = theme==="dark"?"dark-neon":"dark";
-  localStorage.setItem("theme",theme);
-};
 
 /* ================= INPUT ================= */
 document.addEventListener("keydown", e=>{
@@ -228,7 +199,7 @@ function update(){
 
 /* ================= DRAW ================= */
 function draw(){
-  ctx.fillStyle=theme==="dark"?"#000":"#020b1f";
+  ctx.fillStyle="#000";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
   ctx.drawImage(playerImg,player.x,player.y,player.width,player.height);
@@ -262,9 +233,12 @@ function draw(){
 }
 
 /* ================= LOOP ================= */
+function startGame(){
+  initPlatforms();
+  listenLeaderboard();
+  loop();
+}
+
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
 /* ================= START ================= */
-initPlatforms();
-listenLeaderboard();
-loop();
