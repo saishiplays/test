@@ -12,11 +12,16 @@ const firebaseConfig = {
   measurementId: "G-V0LCZRWRN6"
 };
 
-let db, scoresRef;
+// ================= FIREBASE VARIABLES =================
+let db;
+let scoresRef;
 
-if (typeof firebase === "undefined") {
-  console.error("🔥 Firebase NOT loaded! Check script order.");
-} else {
+// ================= FIREBASE INITIALIZATION =================
+function initFirebase() {
+  if (typeof firebase === "undefined") {
+    console.error("🔥 Firebase NOT loaded! Check script order.");
+    return;
+  }
   console.log("🔥 Firebase loaded!");
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
@@ -25,20 +30,19 @@ if (typeof firebase === "undefined") {
 
 // ================= FIREBASE READY CHECK =================
 function firebaseReady(callback) {
-  if (typeof firebase === "undefined" || typeof scoresRef === "undefined") {
-    console.error("🔥 Firebase NOT loaded yet!");
+  if (!scoresRef) {
+    console.error("🔥 Firebase not ready yet!");
     return;
   }
 
-  // Test DB connection
   scoresRef.limitToFirst(1).once("value")
     .then(() => {
       console.log("🔥 Firebase is ready!");
       callback(); // Safe to start the game
     })
     .catch(err => {
-      console.error("🔥 Firebase not ready yet:", err);
-      setTimeout(() => firebaseReady(callback), 500); // Retry every 500ms
+      console.warn("🔥 Firebase not ready, retrying...", err);
+      setTimeout(() => firebaseReady(callback), 500); // Retry in 500ms
     });
 }
 
@@ -46,34 +50,9 @@ function firebaseReady(callback) {
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-// ================= NAME & PLAYER =================
+// ================= PLAYER & GAME STATE =================
 let playerName = localStorage.getItem("playerName") || "";
 let gameStarted = false;
-
-// ================= LEADERBOARD =================
-let leaderboard = [];
-
-// ================= IMAGES =================
-const playerImg = new Image();
-playerImg.src = "assets/player.gif";
-const platformImg = new Image();
-platformImg.src = "assets/platform.png";
-const breakImg = new Image();
-breakImg.src = "assets/platform_break.png";
-
-const images = [playerImg, platformImg, breakImg];
-let imagesLoaded = 0;
-images.forEach(img => {
-  img.onload = () => {
-    imagesLoaded++;
-    console.log("🔥 Image loaded:", img.src);
-    if (imagesLoaded === images.length && gameStarted) {
-      firebaseReady(startGame);
-    }
-  };
-});
-
-// ================= GAME STATE =================
 let gameOver = false;
 let score = 0;
 let velocityY = 0;
@@ -105,6 +84,27 @@ function initPlatforms() {
     platforms.push(createPlatform(canvas.height - i * platformGap));
   }
 }
+
+// ================= IMAGES =================
+const playerImg = new Image();
+playerImg.src = "assets/player.gif";
+const platformImg = new Image();
+platformImg.src = "assets/platform.png";
+const breakImg = new Image();
+breakImg.src = "assets/platform_break.png";
+
+const images = [playerImg, platformImg, breakImg];
+let imagesLoaded = 0;
+
+images.forEach(img => {
+  img.onload = () => {
+    imagesLoaded++;
+    console.log("🔥 Image loaded:", img.src);
+    if (imagesLoaded === images.length && gameStarted) {
+      firebaseReady(startGame);
+    }
+  };
+});
 
 // ================= NAME SCREEN =================
 const nameScreen = document.getElementById("nameScreen");
@@ -149,7 +149,7 @@ function wrapPlayer() {
 
 // ================= FIREBASE SCORE =================
 function saveScoreFirebase() {
-  if (!playerName || typeof scoresRef === "undefined") return;
+  if (!playerName || !scoresRef) return;
   scoresRef.child(playerName).get().then(snapshot => {
     const prev = snapshot.val();
     if (!prev || score > prev.score) {
@@ -160,7 +160,7 @@ function saveScoreFirebase() {
 }
 
 function listenLeaderboard() {
-  if (typeof scoresRef === "undefined") return;
+  if (!scoresRef) return;
   scoresRef.orderByChild("score").limitToLast(5).on("value", snap => {
     const arr = [];
     snap.forEach(s => arr.push(s.val()));
@@ -268,3 +268,6 @@ function loop() {
   draw();
   requestAnimationFrame(loop);
 }
+
+// ================= START =================
+initFirebase(); // Initialize Firebase immediately
