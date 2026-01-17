@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mini Jump Game</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Jump Game</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- NAME INPUT SCREEN -->
+
+<div id="gameContainer">
+  <!-- NAME SCREEN -->
   <div id="nameScreen">
     <div class="box">
       <h2>Enter Your Name</h2>
-      <input id="playerNameInput" maxlength="12" placeholder="Player name" />
+      <input id="playerNameInput" maxlength="12" placeholder="Player name">
       <button id="startBtn">Start</button>
     </div>
   </div>
@@ -19,16 +21,18 @@
   <!-- GAME CANVAS -->
   <canvas id="game" width="400" height="600"></canvas>
 
-  <!-- Theme toggle -->
-  <button id="themeToggle">Toggle Theme</button>
-
-  <!-- Mobile Controls -->
+  <!-- MOBILE CONTROLS -->
   <div id="mobileControls">
-    <button id="leftBtn">◀</button>
-    <button id="rightBtn">▶</button>
+    <button id="leftBtn">◀️</button>
+    <button id="rightBtn">▶️</button>
+    <button id="jumpBtn">⬆️</button>
   </div>
 
-  <!-- Game JS -->
-  <script type="module" src="game.js"></script>
+  <!-- THEME TOGGLE -->
+  <button id="themeToggle">🌙 / ☀️</button>
+</div>
+
+<!-- ✅ Modular Firebase v10 -->
+<script type="module" src="game.js"></script>
 </body>
 </html>
