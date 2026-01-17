@@ -1,44 +1,47 @@
-body {
-  margin: 0;
+/* ================= LOADING SCREEN ================= */
+#loadingScreen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  color: #fff;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background: #0a0a0a;
+  font-family: monospace;
+  font-size: 20px;
+  z-index: 1000;
+  opacity: 1;
+  transition: opacity 0.8s ease;
 }
 
-canvas {
-  background: #111;
-  border-radius: 12px;
+/* Hide loading screen smoothly */
+#loadingScreen.hide {
+  opacity: 0;
+  pointer-events: none;
 }
 
+/* Centering NAME SCREEN */
 #nameScreen {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10;
+  z-index: 999;
 }
 
 #nameScreen .box {
   background: #111;
-  padding: 20px;
+  padding: 20px 30px;
   border-radius: 12px;
   text-align: center;
-  color: white;
-}
-
-#nameScreen input {
-  padding: 8px;
-  width: 160px;
-  margin-top: 10px;
-  text-align: center;
-}
-
-#nameScreen button {
-  margin-top: 10px;
-  padding: 8px 16px;
-  cursor: pointer;
+  color: #fff;
+  font-family: monospace;
 }
