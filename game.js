@@ -11,8 +11,6 @@ import {
   limitToLast
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
-console.log("🔥 GAME JS LOADED (MODULAR)");
-
 const firebaseConfig = {
   apiKey: "AIzaSyCmfqvZ43D2Q35yWk1eb7vScmzv6DXz9xU",
   authDomain: "test-3de69.firebaseapp.com",
@@ -23,24 +21,27 @@ const firebaseConfig = {
   appId: "1:361141862152:web:1a897b3932a7d892a7f6bd"
 };
 
-/* Init Firebase */
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const scoresRef = ref(db, "scores");
-
-console.log("🔥 Firebase modular initialized");
 
 /* ================= CANVAS ================= */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
+/* ================= UI ELEMENTS ================= */
+const nameScreen = document.getElementById("nameScreen");
+const startBtn = document.getElementById("startBtn");
+const nameInput = document.getElementById("playerNameInput");
+
 /* ================= STATE ================= */
-let playerName = localStorage.getItem("playerName") || "Player";
-let gameStarted = true;
+let playerName = localStorage.getItem("playerName") || "";
+let gameStarted = false;
 let gameOver = false;
 let score = 0;
-let velocityY = -10;
+let velocityY = 0;
 const gravity = 0.4;
+let leaderboard = [];
 
 const player = { x: 180, y: 300, width: 40, height: 40, speed: 6 };
 let moveLeft = false;
@@ -51,6 +52,18 @@ const playerImg = new Image();
 playerImg.src = "assets/player.gif";
 const platformImg = new Image();
 platformImg.src = "assets/platform.png";
+const breakImg = new Image();
+breakImg.src = "assets/platform_break.png";
+
+const images = [playerImg, platformImg, breakImg];
+let imagesLoaded = 0;
+
+images.forEach(img => {
+  img.onload = () => {
+    imagesLoaded++;
+    if (imagesLoaded === images.length && gameStarted) startGame();
+  };
+});
 
 /* ================= PLATFORMS ================= */
 const platformCount = 8;
@@ -62,7 +75,10 @@ function createPlatform(y) {
     x: Math.random() * 300,
     y,
     width: 100,
-    height: 16
+    height: 16,
+    type: Math.random() < 0.2 ? "break" : Math.random() < 0.5 ? "move" : "static",
+    dir: Math.random() < 0.5 ? -1 : 1,
+    broken: false
   };
 }
 
@@ -83,7 +99,6 @@ async function saveScore() {
 
   if (!prev || score > prev.score) {
     await set(userRef, { name: playerName, score });
-    console.log("🔥 Score saved:", score);
   }
 }
 
@@ -96,27 +111,73 @@ function listenLeaderboard() {
   });
 }
 
+/* ================= GAME FLOW ================= */
+function startAfterName() {
+  playerName = nameInput.value.trim() || playerName;
+  localStorage.setItem("playerName", playerName);
+  nameScreen.style.display = "none";
+  gameStarted = true;
+  if (imagesLoaded === images.length) startGame();
+}
+
+if (playerName) startAfterName();
+else nameScreen.style.display = "flex";
+
+startBtn.onclick = startAfterName;
+
+/* ================= INPUT ================= */
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft") moveLeft = true;
+  if (e.key === "ArrowRight") moveRight = true;
+  if (e.key === "Enter" && gameOver) restart();
+});
+
+document.addEventListener("keyup", e => {
+  if (e.key === "ArrowLeft") moveLeft = false;
+  if (e.key === "ArrowRight") moveRight = false;
+});
+
+/* ================= HELPERS ================= */
+function wrapPlayer() {
+  if (player.x > canvas.width) player.x = -player.width;
+  if (player.x + player.width < 0) player.x = canvas.width;
+}
+
 /* ================= GAME LOOP ================= */
-let leaderboard = [];
+function restart() {
+  saveScore();
+  gameOver = false;
+  score = 0;
+  velocityY = -10;
+  player.x = 180;
+  player.y = 300;
+  initPlatforms();
+}
 
 function update() {
-  if (gameOver) return;
+  if (!gameStarted || gameOver) return;
 
   if (moveLeft) player.x -= player.speed;
   if (moveRight) player.x += player.speed;
 
   velocityY += gravity;
   player.y += velocityY;
+  wrapPlayer();
 
   platforms.forEach(p => {
-    if (
-      player.y + player.height > p.y &&
-      player.y + player.height < p.y + p.height &&
-      player.x + player.width > p.x &&
-      player.x < p.x + p.width &&
-      velocityY > 0
-    ) {
+    if (p.type === "move") {
+      p.x += p.dir * 1.5;
+      if (p.x <= 0 || p.x + p.width >= canvas.width) p.dir *= -1;
+    }
+
+    if (!p.broken &&
+        player.y + player.height > p.y &&
+        player.y + player.height < p.y + p.height &&
+        player.x + player.width > p.x &&
+        player.x < p.x + p.width &&
+        velocityY > 0) {
       velocityY = -12;
+      if (p.type === "break") p.broken = true;
     }
   });
 
@@ -125,6 +186,10 @@ function update() {
     player.y = 250;
     score++;
   }
+
+  platforms.forEach(p => {
+    if (p.y > canvas.height) Object.assign(p, createPlatform(0));
+  });
 
   if (player.y > canvas.height) {
     gameOver = true;
@@ -137,16 +202,32 @@ function draw() {
   ctx.drawImage(playerImg, player.x, player.y, 40, 40);
 
   platforms.forEach(p => {
-    ctx.drawImage(platformImg, p.x, p.y, p.width, p.height);
+    if (!p.broken) {
+      const img = p.type === "break" ? breakImg : platformImg;
+      ctx.drawImage(img, p.x, p.y, p.width, p.height);
+    }
   });
 
   ctx.fillStyle = "#fff";
-  ctx.fillText(`Score: ${score}`, 10, 20);
+  ctx.font = "16px monospace";
+  ctx.fillText(`Player: ${playerName}`, 10, 20);
+  ctx.fillText(`Score: ${score}`, 10, 40);
 
-  ctx.fillText("Leaderboard:", 250, 20);
+  ctx.fillText("Leaderboard:", 240, 20);
   leaderboard.forEach((l, i) => {
-    ctx.fillText(`${i + 1}. ${l.name} - ${l.score}`, 250, 40 + i * 20);
+    ctx.fillStyle = l.name === playerName ? "#0f0" : "#fff";
+    ctx.fillText(`${i + 1}. ${l.name} - ${l.score}`, 240, 40 + i * 20);
   });
+
+  if (gameOver) {
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#fff";
+    ctx.font = "24px monospace";
+    ctx.fillText("GAME OVER", 120, 260);
+    ctx.font = "14px monospace";
+    ctx.fillText("Press ENTER to Restart", 95, 300);
+  }
 }
 
 function loop() {
@@ -155,19 +236,9 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-/* ================= INPUT ================= */
-document.addEventListener("keydown", e => {
-  if (e.key === "ArrowLeft") moveLeft = true;
-  if (e.key === "ArrowRight") moveRight = true;
-  if (e.key === "Enter" && gameOver) location.reload();
-});
-
-document.addEventListener("keyup", e => {
-  if (e.key === "ArrowLeft") moveLeft = false;
-  if (e.key === "ArrowRight") moveRight = false;
-});
-
-/* ================= START ================= */
-initPlatforms();
-listenLeaderboard();
-loop();
+function startGame() {
+  initPlatforms();
+  listenLeaderboard();
+  velocityY = -10;
+  loop();
+}
