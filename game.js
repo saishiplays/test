@@ -15,6 +15,7 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
+/* ================= CONFIG ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyCmfqvZ43D2Q35yWk1eb7vScmzv6DXz9xU",
   authDomain: "test-3de69.firebaseapp.com",
@@ -41,20 +42,8 @@ const nameScreen = document.getElementById("nameScreen");
 const startBtn = document.getElementById("startBtn");
 const nameInput = document.getElementById("playerNameInput");
 
-/* ================= MOBILE CONTROLS ================= */
-document.getElementById("leftBtn").ontouchstart = () => moveLeft = true;
-document.getElementById("rightBtn").ontouchstart = () => moveRight = true;
-document.getElementById("leftBtn").ontouchend = () => moveLeft = false;
-document.getElementById("rightBtn").ontouchend = () => moveRight = false;
-
-/* ================= THEME ================= */
-let theme = localStorage.getItem("theme") || "dark";
-document.getElementById("themeToggle").onclick = () => {
-  theme = theme === "dark" ? "dark-neon" : "dark";
-  localStorage.setItem("theme", theme);
-};
-
-/* ================= GAME STATE ================= */
+/* ================= STATE ================= */
+let theme = "dark";
 let playerName = localStorage.getItem("playerName") || "";
 let displayName = playerName || "Anonymous";
 let gameStarted = false;
@@ -62,141 +51,129 @@ let gameOver = false;
 let score = 0;
 let bestScore = Number(localStorage.getItem("bestScore") || 0);
 let velocityY = -10;
-const gravity = 0.4;
-let leaderboard = [];
 let difficulty = 1;
+let leaderboard = [];
 
 /* ================= PLAYER ================= */
-const player = { x: 180, y: 300, width: 40, height: 40, speed: 6 };
-let moveLeft = false;
-let moveRight = false;
+const player = { x:180, y:300, width:40, height:40, speed:6 };
+let moveLeft=false, moveRight=false;
 
 /* ================= IMAGES ================= */
 const playerImg = new Image(); playerImg.src = "assets/player.gif";
 const platformImg = new Image(); platformImg.src = "assets/platform.png";
 const breakImg = new Image(); breakImg.src = "assets/platform_break.png";
+
 const images = [playerImg, platformImg, breakImg];
-let imagesLoaded = 0;
+let imagesLoaded=0;
 images.forEach(img => img.onload = () => {
   imagesLoaded++;
-  if (imagesLoaded === images.length && gameStarted) startGame();
+  if(imagesLoaded===images.length && gameStarted) startGame();
 });
 
-/* ================= PLATFORMS (INFINITE) ================= */
-const platformGap = 80;
-const platformCount = 8;
-let platforms = [];
-
-function createPlatform(y) {
-  let type = "static";
-  if (score > 1500 && Math.random() < 0.35) type = "break";
-  else if (score > 800 && Math.random() < 0.5) type = "move";
-  return { x: Math.random() * 300, y, width: 100, height: 16, type, dir: Math.random() < 0.5 ? -1 : 1, broken: false };
+/* ================= PLATFORMS ================= */
+const platformGap=80;
+const platformCount=8;
+let platforms=[];
+function createPlatform(y){
+  let type="static";
+  if(score>1500 && Math.random()<0.35) type="break";
+  else if(score>800 && Math.random()<0.5) type="move";
+  return { x: Math.random()*300, y, width:100, height:16, type, dir: Math.random()<0.5?-1:1, broken:false };
 }
-
-function initPlatforms() {
-  platforms = [];
-  for (let i = 0; i < platformCount; i++) {
-    platforms.push(createPlatform(canvas.height - i * platformGap));
-  }
+function initPlatforms(){
+  platforms=[];
+  for(let i=0;i<platformCount;i++) platforms.push(createPlatform(canvas.height-i*platformGap));
 }
 
 /* ================= WEEKLY RESET ================= */
-function getWeekKey() {
-  const now = new Date();
-  const onejan = new Date(now.getFullYear(), 0, 1);
-  const week = Math.ceil((((now - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+function getWeekKey(){
+  const now=new Date();
+  const onejan=new Date(now.getFullYear(),0,1);
+  const week = Math.ceil((((now-onejan)/86400000)+onejan.getDay()+1)/7);
   return `${now.getFullYear()}-W${week}`;
 }
 const currentWeek = getWeekKey();
 
 /* ================= ANTI-CHEAT ================= */
-function validScore(s) {
-  return Number.isInteger(s) && s >= 0 && s <= 999999;
-}
+function validScore(s){ return Number.isInteger(s) && s>=0 && s<=999999; }
 
 /* ================= FIREBASE SCORE ================= */
-async function saveScore() {
-  if (!uid || !validScore(score)) return;
-
+async function saveScore(){
+  if(!uid || !validScore(score)) return;
   const userRef = ref(db, `scores/${uid}`);
   const snap = await get(userRef);
   const prev = snap.val();
-
-  if (!prev || score > prev.score) {
+  if(!prev || score>prev.score){
     await set(userRef, { name: displayName, score, week: currentWeek });
   }
 }
 
-function listenLeaderboard() {
-  const q = query(ref(db, "scores"), orderByChild("week"));
-  onValue(q, snap => {
-    leaderboard = [];
-    snap.forEach(s => {
+function listenLeaderboard(){
+  const q = query(ref(db,"scores"), orderByChild("week"));
+  onValue(q, snap=>{
+    leaderboard=[];
+    snap.forEach(s=>{
       const v = s.val();
-      if (v.week === currentWeek) leaderboard.push(v);
+      if(v.week===currentWeek) leaderboard.push(v);
     });
-    leaderboard.sort((a,b)=>b.score-b.score);
+    leaderboard.sort((a,b)=>b.score-a.score);
     leaderboard = leaderboard.slice(0,5);
   });
 }
 
 /* ================= NAME SCREEN ================= */
-function startAfterName() {
-  const val = nameInput.value.trim();
-  if (val) { playerName = val; displayName = val; localStorage.setItem("playerName", val); }
-  nameScreen.style.display = "none";
-  gameStarted = true;
+function startAfterName(){
+  const val=nameInput.value.trim();
+  if(val){ playerName=val; displayName=val; localStorage.setItem("playerName",val);}
+  nameScreen.style.display="none";
+  gameStarted=true;
   startGame();
 }
 
-if (playerName) startAfterName();
-else nameScreen.style.display = "flex";
-startBtn.onclick = startAfterName;
+if(playerName) startAfterName();
+else nameScreen.style.display="flex";
+startBtn.onclick=startAfterName;
 
 /* ================= INPUT ================= */
-document.addEventListener("keydown", e => {
+document.addEventListener("keydown", e=>{
   if(e.key==="ArrowLeft") moveLeft=true;
   if(e.key==="ArrowRight") moveRight=true;
   if(e.key==="Enter" && gameOver) restart();
 });
-document.addEventListener("keyup", e => {
+document.addEventListener("keyup", e=>{
   if(e.key==="ArrowLeft") moveLeft=false;
   if(e.key==="ArrowRight") moveRight=false;
 });
 
 /* ================= GAME LOGIC ================= */
-function wrapPlayer() {
+function wrapPlayer(){
   if(player.x>canvas.width) player.x=-player.width;
   if(player.x+player.width<0) player.x=canvas.width;
 }
-
-function restart() {
+function restart(){
   saveScore();
-  bestScore = Math.max(bestScore, score);
-  localStorage.setItem("bestScore", bestScore);
+  bestScore=Math.max(bestScore,score);
+  localStorage.setItem("bestScore",bestScore);
   score=0; velocityY=-10; player.x=180; player.y=300;
   gameOver=false;
   initPlatforms();
 }
-
-function update() {
+function update(){
   if(!gameStarted || gameOver) return;
 
   if(moveLeft) player.x-=player.speed;
   if(moveRight) player.x+=player.speed;
 
-  velocityY += gravity;
-  player.y += velocityY;
-
+  velocityY+=0.4;
+  player.y+=velocityY;
   wrapPlayer();
 
-  difficulty = Math.min(4,1+Math.floor(score/1000));
-  player.speed = 6 + difficulty*0.6;
+  difficulty=Math.min(4, 1 + Math.floor(score/1000));
+  player.speed=6+difficulty*0.6;
 
   platforms.forEach(p=>{
     if(p.type==="move"){
-      p.x += p.dir*(1.2 + difficulty*0.4);
+      p.x+=p.dir*(1.2+difficulty*0.4);
       if(p.x<=0 || p.x+p.width>=canvas.width) p.dir*=-1;
     }
     if(!p.broken &&
@@ -228,17 +205,15 @@ function update() {
   }
 }
 
-/* ================= DRAW (OLD UI STYLE) ================= */
-function draw() {
-  ctx.fillStyle = theme==="dark"?"#000":"#020b1f";
+/* ================= DRAW ================= */
+function draw(){
+  ctx.fillStyle="#000";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
   ctx.drawImage(playerImg,player.x,player.y,player.width,player.height);
 
   platforms.forEach(p=>{
-    if(!p.broken){
-      ctx.drawImage(p.type==="break"?breakImg:platformImg,p.x,p.y,p.width,p.height);
-    }
+    if(!p.broken) ctx.drawImage(p.type==="break"?breakImg:platformImg,p.x,p.y,p.width,p.height);
   });
 
   ctx.fillStyle="#fff";
