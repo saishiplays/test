@@ -1,20 +1,24 @@
-<!-- Mobile Controls -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mini Jump Game</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<button id="themeToggle" style="position:fixed;top:10px;right:10px;z-index:5;">
+  🎨 Theme
+</button>
+
 <div id="mobileControls">
   <button id="leftBtn">◀</button>
   <button id="rightBtn">▶</button>
 </div>
 
-<!-- Theme toggle -->
-<button id="themeToggle" style="position:fixed;top:10px;right:10px;z-index:10;">
-  🎨
-</button>
+  <canvas id="game" width="400" height="600"></canvas>
 
-<!-- Canvas & Name screen remain exactly as before -->
-<canvas id="game" width="400" height="600"></canvas>
-<div id="nameScreen">
-  <input id="playerNameInput" maxlength="12" placeholder="Player name" />
-  <button id="startBtn">Start</button>
-</div>
+  <!-- MUST be module -->
+  <script type="module" src="game.js"></script>
 
-<!-- IMPORTANT: script tag must be modular -->
-<script type="module" src="game.js"></script>
+</body>
+</html>
