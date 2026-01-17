@@ -18,6 +18,7 @@ const ctx = canvas.getContext("2d");
 
 // ================= LOADING SCREEN =================
 const loadingScreen = document.getElementById("loadingScreen");
+let loadingTextInterval;
 
 // ================= PLATFORMS =================
 const platformCount = 8;
@@ -61,7 +62,7 @@ images.forEach(img => {
     console.log("🔥 Image loaded:", img.src);
     if (imagesLoaded === images.length) {
       imagesReady = true;
-      if (gameStarted && firebaseReady) firebaseAndImagesReady();
+      checkReadyToStart();
     }
   };
 });
@@ -74,9 +75,7 @@ function startAfterName() {
   console.log(`🔥 Starting game for player: ${playerName}`);
   nameScreen.style.display = "none";
   gameStarted = true;
-
-  // Only hide loading when Firebase + images are ready
-  firebaseAndImagesReady();
+  checkReadyToStart();
 }
 
 startBtn.onclick = () => {
@@ -131,17 +130,18 @@ function initFirebase() {
   scoresRef = db.ref("scores");
   firebaseReady = true;
   console.log("🔥 Firebase initialized!");
-
-  // Start game if images are ready
-  if (imagesReady && gameStarted) firebaseAndImagesReady();
+  checkReadyToStart();
 }
 
-// ================= FIREBASE + IMAGES READY CHECK =================
-function firebaseAndImagesReady() {
+// ================= FIREBASE + IMAGES + NAME READY CHECK =================
+function checkReadyToStart() {
   if (!firebaseReady || !imagesReady || !gameStarted) return;
 
   // Hide loading screen
-  if (loadingScreen) loadingScreen.style.display = "none";
+  if (loadingScreen) {
+    loadingScreen.style.display = "none";
+    clearInterval(loadingTextInterval);
+  }
 
   startGame();
 }
@@ -268,7 +268,18 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
+// ================= LOADING TEXT ANIMATION =================
+function startLoadingAnimation() {
+  let dots = 0;
+  loadingTextInterval = setInterval(() => {
+    if (!loadingScreen) return;
+    dots = (dots + 1) % 4;
+    loadingScreen.innerHTML = `<h2>Loading Game${'.'.repeat(dots)}</h2>`;
+  }, 500);
+}
+
 // ================= START =================
 window.addEventListener("load", () => {
-  initFirebase(); // Firebase is guaranteed to exist after window fully loads
+  startLoadingAnimation();
+  initFirebase();
 });
