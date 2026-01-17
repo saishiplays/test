@@ -1,49 +1,40 @@
 console.log("🔥 GAME JS LOADED");
-console.log("typeof firebase =", typeof firebase);
 
-if (typeof firebase === "undefined") {
-  console.error("🔥 Firebase NOT loaded! Check script order.");
-}
-
-/* ================= FIREBASE CONFIG ================= */
+// ================= FIREBASE CONFIG =================
 const firebaseConfig = {
   apiKey: "AIzaSyCmfqvZ43D2Q35yWk1eb7vScmzv6DXz9xU",
   authDomain: "test-3de69.firebaseapp.com",
   projectId: "test-3de69",
-  dataURL:"https://test-3de69-default-rtdb.asia-southeast1.firebasedatabase.app/",
-  storageBucket: "test-3de69.firebasestorage.app",
+  databaseURL: "https://test-3de69-default-rtdb.asia-southeast1.firebasedatabase.app",
+  storageBucket: "test-3de69.appspot.com",
   messagingSenderId: "361141862152",
   appId: "1:361141862152:web:1a897b3932a7d892a7f6bd",
   measurementId: "G-V0LCZRWRN6"
 };
+
+let db, scoresRef;
 
 if (typeof firebase === "undefined") {
   console.error("🔥 Firebase NOT loaded! Check script order.");
 } else {
   console.log("🔥 Firebase loaded!");
   firebase.initializeApp(firebaseConfig);
-  var db = firebase.database();
-  var scoresRef = db.ref("scores");
+  db = firebase.database();
+  scoresRef = db.ref("scores");
 }
 
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const scoresRef = db.ref("scores");
-
-/* ================= CANVAS ================= */
+// ================= CANVAS =================
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-/* ================= NAME & PLAYER ================= */
+// ================= NAME & PLAYER =================
 let playerName = localStorage.getItem("playerName") || "";
 let gameStarted = false;
 
-/* ================= LEADERBOARD ================= */
+// ================= LEADERBOARD =================
 let leaderboard = [];
 
-/* ================= IMAGES ================= */
+// ================= IMAGES =================
 const playerImg = new Image();
 playerImg.src = "assets/player.gif";
 const platformImg = new Image();
@@ -61,7 +52,7 @@ images.forEach(img => {
   };
 });
 
-/* ================= GAME STATE ================= */
+// ================= GAME STATE =================
 let gameOver = false;
 let score = 0;
 let velocityY = 0;
@@ -70,10 +61,11 @@ const player = { x: 180, y: 300, width: 40, height: 40, speed: 6 };
 let moveLeft = false;
 let moveRight = false;
 
-/* ================= PLATFORMS ================= */
+// ================= PLATFORMS =================
 const platformCount = 8;
 const platformGap = 80;
 let platforms = [];
+
 function createPlatform(y) {
   return {
     x: Math.random() * 300,
@@ -85,6 +77,7 @@ function createPlatform(y) {
     broken: false
   };
 }
+
 function initPlatforms() {
   platforms = [];
   for (let i = 0; i < platformCount; i++) {
@@ -92,7 +85,7 @@ function initPlatforms() {
   }
 }
 
-/* ================= NAME SCREEN ================= */
+// ================= NAME SCREEN =================
 const nameScreen = document.getElementById("nameScreen");
 const startBtn = document.getElementById("startBtn");
 
@@ -114,7 +107,7 @@ startBtn.onclick = () => {
   startAfterName();
 };
 
-/* ================= CONTROLS ================= */
+// ================= CONTROLS =================
 document.addEventListener("keydown", e => {
   if (e.key === "ArrowLeft") moveLeft = true;
   if (e.key === "ArrowRight") moveRight = true;
@@ -125,15 +118,15 @@ document.addEventListener("keyup", e => {
   if (e.key === "ArrowRight") moveRight = false;
 });
 
-/* ================= HELPERS ================= */
+// ================= HELPERS =================
 function wrapPlayer() {
   if (player.x > canvas.width) player.x = -player.width;
   if (player.x + player.width < 0) player.x = canvas.width;
 }
 
-/* ================= FIREBASE SCORE ================= */
+// ================= FIREBASE SCORE =================
 function saveScoreFirebase() {
-  if (!playerName || typeof firebase === "undefined") return;
+  if (!playerName || typeof scoresRef === "undefined") return;
   scoresRef.child(playerName).get().then(snapshot => {
     const prev = snapshot.val();
     if (!prev || score > prev.score) {
@@ -144,7 +137,7 @@ function saveScoreFirebase() {
 }
 
 function listenLeaderboard() {
-  if (typeof firebase === "undefined") return;
+  if (typeof scoresRef === "undefined") return;
   scoresRef.orderByChild("score").limitToLast(5).on("value", snap => {
     const arr = [];
     snap.forEach(s => arr.push(s.val()));
@@ -152,7 +145,7 @@ function listenLeaderboard() {
   });
 }
 
-/* ================= GAME FUNCTIONS ================= */
+// ================= GAME FUNCTIONS =================
 function restart() {
   saveScoreFirebase();
   gameOver = false;
@@ -240,7 +233,7 @@ function draw() {
   }
 }
 
-/* ================= LOOP ================= */
+// ================= LOOP =================
 function startGame() {
   initPlatforms();
   listenLeaderboard();
