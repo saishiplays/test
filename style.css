@@ -1,0 +1,44 @@
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #0a0a0a;
+}
+
+canvas {
+  background: #111;
+  border-radius: 12px;
+}
+
+#nameScreen {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+#nameScreen .box {
+  background: #111;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  color: white;
+}
+
+#nameScreen input {
+  padding: 8px;
+  width: 160px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+#nameScreen button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
